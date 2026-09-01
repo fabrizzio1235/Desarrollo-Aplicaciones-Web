@@ -2,9 +2,7 @@
 
 ## 👥 Integrantes del Equipo
 
-| Foto | Nombre |
-| :---: | :--- |
-| <img width="200" height="300" alt="image" src="https://github.com/user-attachments/assets/44a4ce98-44e6-462d-be06-c731a60380be" />| **José Luis Basulto Cámara**|
-| <img width="200" height="300" alt="image" src="https://github.com/user-attachments/assets/6ca6dc6b-1721-442d-ad4c-7aa4f2cdabc2" />| **Fabrizzio Sebastian España Chi**|
-| <img width="200" height="300" alt="image" src="https://github.com/user-attachments/assets/4aa0cc85-62f8-4b0a-8725-0cf834690d50" />| **José Alberto Osorno Herrera**|
-| <img width="220" height="280" alt="image" src="https://github.com/user-attachments/assets/6c2adc25-bb82-4501-9749-b8234456953b" />| **François Bilal Pageau Santos**|
+|<img width="200" height="280" alt="image" src="https://github.com/user-attachments/assets/1b84f728-b79c-40ba-92d8-55dbfeeaa937" />|<img width="200" height="280" alt="image" src="https://github.com/user-attachments/assets/76d3b2ca-1b67-4557-89ad-94701ce84e78" />|<img width="200" height="280" alt="image" src="https://github.com/user-attachments/assets/07cb1a38-b1a6-4ed6-b6ad-df0231e11ff3" />|<img width="200" height="250" alt="image" src="https://github.com/user-attachments/assets/a4716f4d-24de-4c6a-aa53-4e2b98eb0cbe" />|
+| :---: | :---: | :---: | :---: |
+| **José Luis<br>Basulto Cámara** | **Fabrizzio Sebastian<br>España Chi**| **José Alberto<br>Osorno Herrera**| **François Bilal<br>Pageau Santos**|
+
