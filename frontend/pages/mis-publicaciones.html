@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Publicaciones y Ventas | JaguarZon UADY</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header class="main-header">
+    <div class="header-container">
+      <a href="productos.html" class="brand-logo"><strong>JaguarZon</strong> <span>UADY</span></a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="productos.html">Explorar</a></li>
+          <li><a href="favoritos.html">Favoritos</a></li>
+          <li><a href="mensajes.html">Mensajes</a></li>
+          <li><a href="mis-publicaciones.html" aria-current="page">Mis Ventas</a></li>
+          <li><a href="publicar-producto.html" class="btn btn-primary btn-sm">+ Vender</a></li>
+          <li><a href="perfil.html">Mi Perfil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="dashboard-container">
+    <header class="page-header">
+      <div>
+        <h1>Panel de Vendedor</h1>
+        <p>Administra tu catálogo activo y actualiza el estado de tus entregas en campus.</p>
+      </div>
+      <a href="publicar-producto.html" class="btn btn-primary">+ Nueva publicación</a>
+    </header>
+
+    <!-- Sección 1: Pedidos recibidos (Máquina de estados) -->
+    <section class="dashboard-section" aria-labelledby="pedidos-recibidos-titulo">
+      <h2 id="pedidos-recibidos-titulo">Pedidos y entregas coordinadas</h2>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Artículo</th>
+              <th>Comprador UADY</th>
+              <th>Punto y horario acordado</th>
+              <th>Total</th>
+              <th>Estado del pedido</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-pedidos-vendedor">
+            <tr data-pedido-id="501" data-estado="pendiente">
+              <td><strong>Cálculo de una Variable - Stewart</strong> (x1)</td>
+              <td>Jorge Alberto K.<br><small>a19203411@alumnos.uady.mx</small></td>
+              <td>Cafetería FIUADY<br><small>Lun 11:00 AM</small></td>
+              <td>$350.00</td>
+              <td><span class="status-badge status-pendiente">Pendiente de entrega</span></td>
+              <td class="table-actions">
+                <button type="button" class="btn btn-success btn-sm" data-action="completar">Marcar entregado</button>
+                <button type="button" class="btn btn-danger btn-sm" data-action="cancelar">Cancelar</button>
+                <a href="mensajes.html?pedido=501" class="btn btn-secondary btn-sm">Chat</a>
+              </td>
+            </tr>
+            <tr data-pedido-id="498" data-estado="completado">
+              <td><strong>Compás de precisión Staedtler</strong> (x1)</td>
+              <td>Mariana G.<br><small>a21208890@alumnos.uady.mx</small></td>
+              <td>Explanada Arquitectura<br><small>Completado el 12 Nov</small></td>
+              <td>$180.00</td>
+              <td><span class="status-badge status-completado">Entregado / Completado</span></td>
+              <td class="table-actions">
+                <span>Transacción cerrada</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Sección 2: Catálogo publicado por el usuario -->
+    <section class="dashboard-section" aria-labelledby="mis-articulos-titulo">
+      <h2 id="mis-articulos-titulo">Mis publicaciones activas</h2>
+
+      <div class="listings-list" id="lista-mis-publicaciones">
+        <article class="listing-row" data-producto-id="101">
+          <img src="../assets/placeholder-libro.jpg" alt="Cálculo de una Variable">
+          <div class="listing-info">
+            <h3><a href="detalle-producto.html?id=101">Cálculo de una Variable - James Stewart (8ª Ed.)</a></h3>
+            <p>Modalidad: <strong>Precio fijo ($350.00 MXN)</strong> · Stock restante: <strong>2</strong></p>
+            <p><small>Entrega en: Campus Ciencias Exactas e Ingenierías</small></p>
+          </div>
+          <div class="listing-actions">
+            <a href="publicar-producto.html?edit=101" class="btn btn-secondary btn-sm">Editar</a>
+            <button type="button" class="btn btn-outline-danger btn-sm" data-action="eliminar">Dar de baja</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/mis-publicaciones.js" defer></script>
+</body>
+</html>

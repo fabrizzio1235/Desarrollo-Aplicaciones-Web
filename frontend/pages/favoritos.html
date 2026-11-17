@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Favoritos | JaguarZon UADY</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header class="main-header">
+    <div class="header-container">
+      <a href="productos.html" class="brand-logo"><strong>JaguarZon</strong> <span>UADY</span></a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="productos.html">Explorar</a></li>
+          <li><a href="favoritos.html" aria-current="page">Favoritos</a></li>
+          <li><a href="mensajes.html">Mensajes</a></li>
+          <li><a href="mis-publicaciones.html">Mis Ventas</a></li>
+          <li><a href="publicar-producto.html" class="btn btn-primary btn-sm">+ Vender</a></li>
+          <li><a href="perfil.html">Mi Perfil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="favorites-container">
+    <header class="page-header">
+      <h1>Artículos guardados</h1>
+      <p>Publicaciones que te interesan para coordinar compra en tu campus.</p>
+    </header>
+
+    <section class="product-grid" id="lista-favoritos" aria-label="Lista de productos favoritos">
+      <article class="product-card" data-producto-id="103">
+        <figure class="product-media">
+          <img src="../assets/placeholder-bata.jpg" alt="Bata de laboratorio talla M">
+          <span class="tag tag-fijo">Precio fijo</span>
+        </figure>
+        <div class="product-body">
+          <span class="product-category">Material de laboratorio</span>
+          <h2 class="product-title"><a href="detalle-producto.html?id=103">Bata de Laboratorio 100% Algodón Talla M</a></h2>
+          <p class="product-price">$220.00 MXN</p>
+          <p class="product-delivery"><strong>Entrega:</strong> Campus Ciencias de la Salud</p>
+          <div class="card-actions">
+            <a href="detalle-producto.html?id=103" class="btn btn-primary btn-sm">Ver y coordinar</a>
+            <button type="button" class="btn btn-outline btn-sm" data-action="quitar-favorito">Quitar</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section id="favoritos-vacio" class="empty-state" hidden>
+      <h2>Aún no tienes artículos guardados</h2>
+      <p>Explora el catálogo de tu campus y guarda libros o materiales para compararlos después.</p>
+      <a href="productos.html" class="btn btn-primary">Ir al catálogo</a>
+    </section>
+  </main>
+
+  <script src="../js/favoritos.js" defer></script>
+</body>
+</html>

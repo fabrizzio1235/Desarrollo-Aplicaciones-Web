@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle del Producto | JaguarZon UADY</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header class="main-header">
+    <div class="header-container">
+      <a href="productos.html" class="brand-logo"><strong>JaguarZon</strong> <span>UADY</span></a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="productos.html">Explorar</a></li>
+          <li><a href="favoritos.html">Favoritos</a></li>
+          <li><a href="mensajes.html">Mensajes</a></li>
+          <li><a href="mis-publicaciones.html">Mis Ventas</a></li>
+          <li><a href="publicar-producto.html" class="btn btn-primary btn-sm">+ Vender</a></li>
+          <li><a href="perfil.html">Mi Perfil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="detail-container">
+    <nav class="breadcrumb" aria-label="Ruta de navegación">
+      <ol>
+        <li><a href="productos.html">Catálogo</a></li>
+        <li><a href="productos.html?categoria=libros">Libros</a></li>
+        <li aria-current="page">Cálculo de una Variable - James Stewart</li>
+      </ol>
+    </nav>
+
+    <article class="product-detail-grid" id="detalle-articulo" data-producto-id="101">
+      <!-- Galería de imágenes -->
+      <section class="detail-gallery" aria-label="Fotografías del producto">
+        <figure class="main-image">
+          <img id="img-principal" src="../assets/placeholder-libro.jpg" alt="Portada libro Cálculo de una Variable">
+        </figure>
+        <div class="thumbnail-list" role="group" aria-label="Miniaturas">
+          <button type="button" class="thumb active"><img src="../assets/placeholder-libro.jpg" alt="Vista frontal"></button>
+          <button type="button" class="thumb"><img src="../assets/placeholder-libro-2.jpg" alt="Índice del libro"></button>
+        </div>
+      </section>
+
+      <!-- Información, compra / subasta y puntos de entrega -->
+      <section class="detail-info">
+        <header>
+          <div class="detail-badges">
+            <span class="tag tag-fijo" id="detalle-modalidad">Precio fijo</span>
+            <span class="stock-badge" id="detalle-stock">Disponible: 2 unidades</span>
+          </div>
+          <h1 id="detalle-titulo">Cálculo de una Variable - James Stewart (8ª Ed.)</h1>
+          <p class="detail-price" id="detalle-precio">$350.00 MXN</p>
+        </header>
+
+        <div class="detail-description">
+          <h2>Descripción del artículo</h2>
+          <p>Libro en excelente estado, sin páginas subrayadas ni roturas. Ideal para Cálculo Diferencial e Integral en FIUADY o FMAT.</p>
+        </div>
+
+        <!-- Logística de entrega en campus -->
+        <section class="delivery-box" aria-labelledby="logistica-titulo">
+          <h2 id="logistica-titulo">Puntos y horarios de entrega en campus</h2>
+          <p class="payment-notice"><strong>Pago a contraentrega:</strong> Liquida en efectivo o transferencia al revisar el artículo.</p>
+
+          <form id="form-solicitud-compra">
+            <div class="form-group">
+              <label for="punto-entrega-select">Selecciona el punto de encuentro:</label>
+              <select id="punto-entrega-select" name="punto_entrega" required>
+                <option value="fiuady-cafeteria">Campus Exactas — Cafetería FIUADY</option>
+                <option value="fiuady-biblioteca">Campus Exactas — Entrada Biblioteca Central</option>
+                <option value="fmat-explanada">Campus Exactas — Explanada FMAT</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="horario-entrega-select">Franja horaria del vendedor:</label>
+              <select id="horario-entrega-select" name="horario_entrega" required>
+                <option value="lun-mie-11">Lunes y Miércoles: 11:00 AM – 12:00 PM</option>
+                <option value="mar-jue-14">Martes y Jueves: 2:00 PM – 3:00 PM</option>
+              </select>
+            </div>
+
+            <!-- Bloque de Compra Directa (Precio Fijo) -->
+            <div id="bloque-precio-fijo" class="purchase-controls">
+              <div class="quantity-control">
+                <label for="cantidad-compra">Cantidad:</label>
+                <input type="number" id="cantidad-compra" name="cantidad" value="1" min="1" max="2" required>
+              </div>
+              <button type="submit" class="btn btn-primary btn-lg">Solicitar compra a contraentrega</button>
+            </div>
+
+            <!-- Bloque de Subasta (Oculto cuando es precio fijo) -->
+            <div id="bloque-subasta" class="auction-controls" hidden>
+              <p>Puja mínima siguiente: <strong>$290.00 MXN</strong> · Cierra <time datetime="2026-11-18T18:00">18 Nov, 6:00 PM</time></p>
+              <div class="bid-input-group">
+                <label for="monto-puja" class="sr-only">Tu oferta en MXN</label>
+                <input type="number" id="monto-puja" name="puja" min="290" step="10" placeholder="Ingresa tu puja ($)">
+                <button type="button" id="btn-pujar" class="btn btn-primary">Realizar puja</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="secondary-actions">
+            <a href="mensajes.html?producto=101&vendedor=anasofia" class="btn btn-secondary">Enviar mensaje al vendedor</a>
+            <button type="button" id="btn-guardar-favorito" class="btn btn-outline" aria-pressed="false">Guardar en favoritos</button>
+          </div>
+        </section>
+
+        <!-- Tarjeta del Vendedor y Reputación -->
+        <aside class="seller-card" aria-labelledby="vendedor-titulo">
+          <h2 id="vendedor-titulo">Información del vendedor</h2>
+          <div class="seller-summary">
+            <div>
+              <strong>Ana Sofía Martínez</strong>
+              <span class="verified-badge">Correo UADY verificado</span>
+              <p>Facultad de Ingeniería (FIUADY)</p>
+            </div>
+            <div class="seller-score">
+              <span class="stars" aria-label="4.9 de 5 estrellas">★★★★★</span>
+              <strong>4.9 / 5.0</strong>
+              <small>(14 ventas completadas)</small>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </article>
+
+    <!-- Reseñas verificadas del vendedor -->
+    <section class="reviews-section" aria-labelledby="resenas-titulo">
+      <h2 id="resenas-titulo">Reseñas de compradores verificados</h2>
+      <ul class="review-list">
+        <li class="review-item">
+          <header>
+            <strong>Jorge Alberto K.</strong>
+            <span aria-label="5 estrellas">★★★★★</span>
+            <time datetime="2026-11-10">10 Nov 2026</time>
+          </header>
+          <p>Puntual en la cafetería de FIUADY, el libro estaba tal cual en las fotos.</p>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Modal de confirmación de pedido -->
+  <dialog id="modal-confirmacion-pedido" aria-labelledby="modal-pedido-titulo">
+    <h2 id="modal-pedido-titulo">¡Solicitud de pedido registrada!</h2>
+    <p>El estado de tu pedido ahora es <strong>Pendiente de entrega</strong>.</p>
+    <p>Acuerda los últimos detalles con el vendedor a través del chat interno.</p>
+    <div class="modal-actions">
+      <a href="mensajes.html?producto=101" class="btn btn-primary">Ir al chat del pedido</a>
+      <button type="button" id="btn-cerrar-modal" class="btn btn-secondary">Cerrar</button>
+    </div>
+  </dialog>
+
+  <script src="../js/detalle.js" defer></script>
+</body>
+</html>
