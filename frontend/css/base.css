@@ -1,0 +1,131 @@
+/* JaguarZon UADY - estilos base compartidos */
+:root {
+  --azul: #214f73;
+  --azul-oscuro: #173650;
+  --azul-claro: #eaf2f8;
+  --amarillo: #efc44b;
+  --fondo: #f4f6f8;
+  --blanco: #ffffff;
+  --texto: #263442;
+  --texto-suave: #657384;
+  --borde: #dce3e9;
+  --verde: #2c805c;
+  --rojo: #b94a48;
+  --naranja: #a96b16;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--azul);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--azul-oscuro);
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin-top: 0;
+  color: var(--azul-oscuro);
+  line-height: 1.25;
+}
+
+h1 {
+  margin-bottom: 12px;
+  font-size: 2rem;
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+}
+
+h3 {
+  margin-bottom: 9px;
+  font-size: 1.08rem;
+}
+
+p {
+  color: var(--texto-suave);
+}
+
+small {
+  color: var(--texto-suave);
+}
+
+figure {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(33, 79, 115, .25);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+::selection {
+  background: #f8e5a5;
+  color: var(--azul-oscuro);
+}
+
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+  }
+}

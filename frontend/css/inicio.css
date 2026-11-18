@@ -1,0 +1,234 @@
+/* Estilos exclusivos de index.html */
+.landing-header .header-container {
+  min-height: 72px;
+}
+
+.landing-nav a {
+  padding: 8px 10px;
+}
+
+.auth-nav-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hero-section {
+  padding: 75px 24px;
+  background: #1d4567;
+  border-bottom: 5px solid var(--amarillo);
+}
+
+.hero-content {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
+.hero-content h1 {
+  max-width: 760px;
+  margin-bottom: 16px;
+  color: white;
+  font-size: clamp(2.1rem, 4.5vw, 3.4rem);
+  line-height: 1.12;
+}
+
+.hero-content .verified-badge {
+  margin-bottom: 17px;
+  border-color: #c7d9e7;
+  background: #eaf2f8;
+  color: #244d6c;
+}
+
+.hero-subtitle {
+  max-width: 720px;
+  margin-bottom: 23px;
+  color: #e5edf3;
+  font-size: 1.02rem;
+}
+
+.hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hero-cta-group .btn-primary {
+  border-color: var(--amarillo);
+  background: var(--amarillo);
+  color: #263442;
+}
+
+.hero-cta-group .btn-primary:hover {
+  background: #e3b532;
+}
+
+.hero-cta-group .btn-outline {
+  border-color: white;
+  background: transparent;
+  color: white;
+}
+
+.hero-cta-group .btn-outline:hover {
+  background: rgba(255,255,255,.12);
+}
+
+.landing-section {
+  padding: 55px 24px;
+  background: white;
+}
+
+.landing-section.bg-alt {
+  background: #eef2f5;
+}
+
+.section-container {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
+.section-header {
+  max-width: 720px;
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.section-header h2 {
+  margin-bottom: 8px;
+}
+
+.section-header p {
+  margin: 0;
+}
+
+.steps-grid,
+.campus-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.step-card,
+.campus-card {
+  padding: 20px;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: white;
+}
+
+.step-number {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  background: #f8e8ad;
+  color: #70550b;
+  font-weight: bold;
+}
+
+.step-card p,
+.campus-card p {
+  margin-bottom: 0;
+  font-size: .88rem;
+}
+
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+}
+
+.category-pill {
+  display: inline-block;
+  padding: 9px 14px;
+  border: 1px solid #cbd7e0;
+  border-radius: 5px;
+  background: #f8fafb;
+  color: var(--azul);
+  font-size: .88rem;
+  font-weight: bold;
+}
+
+.category-pill:hover {
+  background: var(--azul-claro);
+  text-decoration: none;
+}
+
+.cta-banner {
+  padding: 48px 24px;
+  background: #e8eef3;
+  border-top: 1px solid #d7e0e7;
+  text-align: center;
+}
+
+.cta-banner .section-container {
+  max-width: 800px;
+}
+
+.cta-banner h2 {
+  margin-bottom: 9px;
+}
+
+.cta-banner p {
+  margin-bottom: 18px;
+}
+
+.main-footer {
+  padding: 18px 24px;
+  background: #173650;
+  text-align: center;
+}
+
+.main-footer p {
+  max-width: 1000px;
+  margin: 0 auto;
+  color: #e1e8ee;
+  font-size: .8rem;
+}
+
+@media (max-width: 760px) {
+  .landing-header .header-container {
+    justify-content: center;
+  }
+
+  .landing-nav {
+    width: 100%;
+  }
+
+  .landing-nav ul {
+    justify-content: center;
+  }
+
+  .steps-grid,
+  .campus-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-section {
+    padding: 55px 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-nav-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .steps-grid,
+  .campus-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-section {
+    padding: 42px 18px;
+  }
+
+  .hero-cta-group {
+    flex-direction: column;
+  }
+}
