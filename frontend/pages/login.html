@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Iniciar Sesión | JaguarZon UADY</title>
   <link rel="stylesheet" href="../css/styles.css">
+  
+  <script src="../js/api/apiAutenticacion.js" defer></script>
+  <script src="../js/pages/login.js" defer></script>
 </head>
 <body class="auth-page">
   <header class="auth-header">
@@ -37,7 +40,7 @@
 
         <div class="form-options">
           <label class="form-check">
-            <input type="checkbox" name="recordar" id="recordar-sesion">
+            <input type="checkbox" name="mantener_sesion" id="login-recordar">
             <span>Mantener sesión activa</span>
           </label>
         </div>
@@ -53,6 +56,5 @@
     </section>
   </main>
 
-  <script src="../js/auth.js" defer></script>
 </body>
 </html>

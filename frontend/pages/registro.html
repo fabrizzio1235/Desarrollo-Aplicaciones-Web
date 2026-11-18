@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro Institucional | JaguarZon UADY</title>
   <link rel="stylesheet" href="../css/styles.css">
+
+  <script src="../js/api/apiAutenticacion.js" defer></script>
+<script src="../js/pages/registro.js" defer></script>
 </head>
 <body class="auth-page">
   <header class="auth-header">
@@ -31,7 +34,6 @@
             id="correo-uady"
             name="correo"
             placeholder="a20214589@alumnos.uady.mx"
-            pattern="^[a-zA-Z0-9._%+-]+@(alumnos\.uady\.mx|correo\.uady\.mx)$"
             title="Debes ingresar un correo institucional válido (@alumnos.uady.mx o @correo.uady.mx)"
             required
             autocomplete="email">
@@ -75,7 +77,5 @@
       </footer>
     </section>
   </main>
-
-  <script src="../js/auth.js" defer></script>
 </body>
 </html>
