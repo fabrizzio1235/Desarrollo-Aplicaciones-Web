@@ -1,0 +1,187 @@
+/* Estilos exclusivos de perfil.html */
+.profile-container {
+  width: min(1120px, calc(100% - 36px));
+  margin: 30px auto 60px;
+}
+
+.profile-header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 22px;
+  margin-bottom: 22px;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: white;
+}
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar-placeholder {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  place-items: center;
+  border: 2px solid #d5e0e8;
+  border-radius: 50%;
+  background: #e8f0f6;
+  color: var(--azul-oscuro);
+  font-size: 1.35rem;
+  font-weight: bold;
+}
+
+.profile-identity h1 {
+  margin-bottom: 5px;
+  font-size: 1.55rem;
+}
+
+.profile-identity p {
+  margin: 4px 0;
+  font-size: .82rem;
+}
+
+.institutional-email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.profile-reputation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.reputation-label {
+  color: var(--texto-suave);
+  font-size: .78rem;
+  font-weight: bold;
+}
+
+.reputation-score {
+  color: #a27613;
+  font-size: 1.25rem;
+}
+
+.profile-reputation small {
+  margin-bottom: 6px;
+  font-size: .72rem;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.profile-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: white;
+}
+
+.profile-card h2 {
+  margin-bottom: 17px;
+  font-size: 1.18rem;
+}
+
+.orders-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e3e8ed;
+  border-radius: 5px;
+  background: #fafbfc;
+}
+
+.order-details strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--azul-oscuro);
+  font-size: .86rem;
+}
+
+.order-details p {
+  margin: 0 0 6px;
+  font-size: .76rem;
+}
+
+.order-actions {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 800px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-header-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-reputation {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .profile-container {
+    width: calc(100% - 24px);
+    margin-top: 20px;
+  }
+
+  .profile-header-card,
+  .profile-card {
+    padding: 15px;
+  }
+
+  .profile-identity {
+    align-items: flex-start;
+    gap: 11px;
+  }
+
+  .avatar-placeholder {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+    font-size: 1.1rem;
+  }
+
+  .profile-identity h1 {
+    font-size: 1.25rem;
+  }
+
+  .order-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .order-actions,
+  .order-actions .btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,12 @@
+/* Estilos exclusivos de login.html */
+.auth-card {
+  max-width: 440px;
+}
+
+.auth-card h1 {
+  color: var(--azul-oscuro);
+}
+
+#form-login .btn-block {
+  margin-top: 5px;
+}
