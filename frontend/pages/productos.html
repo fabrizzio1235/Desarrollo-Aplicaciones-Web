@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Explorar Catálogo | JaguarZon UADY</title>
-    <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/componentes.css">
   <link rel="stylesheet" href="../css/productos.css">
 
   <script src="../js/api/apiAutenticacion.js" defer></script>
   <script src="../js/api/guardianRutas.js" defer></script>
+  <script src="../js/api/apiProductos.js" defer></script>
   <script src="../js/pages/catalogo.js" defer></script>
 </head>
 <body>
@@ -87,7 +88,7 @@
       <header class="catalog-toolbar">
         <div>
           <h1 id="catalogo-titulo">Artículos disponibles en la UADY</h1>
-          <p id="resultados-contador" aria-live="polite">Mostrando 3 publicaciones activas</p>
+          <p id="resultados-contador" aria-live="polite">Mostrando 0 publicaciones activas</p>
         </div>
         <div class="sort-control">
           <label for="ordenar-por">Ordenar por:</label>
@@ -99,66 +100,13 @@
           </select>
         </div>
       </header>
+      <!--Contenedor que en js se va llenando de forma dinamica conforme van existiendo más productos-->
+      <div class="product-grid" id="grid-productos"></div>
 
-      <div class="product-grid" id="grid-productos">
-        <!-- Ejemplo de tarjeta: Precio Fijo -->
-        <article class="product-card" data-producto-id="101" data-modalidad="fijo" data-categoria="libros" data-campus="exactas">
-          <figure class="product-media">
-            <img src="../assets/placeholder-libro.jpg" alt="Libro Cálculo de una Variable Stewart 8va Edición">
-            <span class="tag tag-fijo">Precio fijo</span>
-            <button type="button" class="btn-fav" aria-label="Guardar en favoritos" aria-pressed="false">♡</button>
-          </figure>
-          <div class="product-body">
-            <span class="product-category">Libros</span>
-            <h2 class="product-title"><a href="detalle-producto.html?id=101">Cálculo de una Variable - James Stewart (8ª Ed.)</a></h2>
-            <p class="product-price">$350.00 MXN</p>
-            <p class="product-delivery"><strong>Entrega:</strong> Campus Exactas (FIUADY / FMAT)</p>
-            <footer class="product-seller">
-              <span>Ana Sofía M.</span>
-              <span class="rating" aria-label="Calificación 4.9 de 5 estrellas">★ 4.9 (14)</span>
-            </footer>
-          </div>
-        </article>
-
-        <!-- Ejemplo de tarjeta: Subasta -->
-        <article class="product-card" data-producto-id="102" data-modalidad="subasta" data-categoria="electronica" data-campus="exactas">
-          <figure class="product-media">
-            <img src="../assets/placeholder-arduino.jpg" alt="Kit Arduino Uno R3 con sensores">
-            <span class="tag tag-subasta">Subasta</span>
-            <button type="button" class="btn-fav" aria-label="Guardar en favoritos" aria-pressed="false">♡</button>
-          </figure>
-          <div class="product-body">
-            <span class="product-category">Electrónica</span>
-            <h2 class="product-title"><a href="detalle-producto.html?id=102">Kit Arduino Uno R3 + Protoboard y Sensores</a></h2>
-            <p class="product-price">Puja actual: <strong>$280.00 MXN</strong></p>
-            <p class="auction-timer">Cierra: <time datetime="2026-11-18T18:00">18 Nov, 6:00 PM</time></p>
-            <p class="product-delivery"><strong>Entrega:</strong> Exactas / Ciencias de la Salud</p>
-            <footer class="product-seller">
-              <span>Luis Fernando R.</span>
-              <span class="rating" aria-label="Calificación 5.0 de 5 estrellas">★ 5.0 (8)</span>
-            </footer>
-          </div>
-        </article>
-
-        <!-- Ejemplo de tarjeta: Material de laboratorio -->
-        <article class="product-card" data-producto-id="103" data-modalidad="fijo" data-categoria="laboratorio" data-campus="salud">
-          <figure class="product-media">
-            <img src="../assets/placeholder-bata.jpg" alt="Bata de laboratorio talla M">
-            <span class="tag tag-fijo">Precio fijo</span>
-            <button type="button" class="btn-fav" aria-label="Guardar en favoritos" aria-pressed="true">♥</button>
-          </figure>
-          <div class="product-body">
-            <span class="product-category">Material de laboratorio</span>
-            <h2 class="product-title"><a href="detalle-producto.html?id=103">Bata de Laboratorio 100% Algodón Talla M</a></h2>
-            <p class="product-price">$220.00 MXN</p>
-            <p class="product-delivery"><strong>Entrega:</strong> Campus Ciencias de la Salud</p>
-            <footer class="product-seller">
-              <span>Valeria C.</span>
-              <span class="rating" aria-label="Calificación 4.8 de 5 estrellas">★ 4.8 (21)</span>
-            </footer>
-          </div>
-        </article>
-      </div>
+      <section id="catalogo-vacio" class="empty-state" hidden>
+        <h2>No se encontraron artículos</h2>
+        <p>Ninguna publicación coincide con los filtros seleccionados. Intenta ampliar tu búsqueda o limpiar los filtros.</p>
+      </section>
     </section>
   </main>
 
