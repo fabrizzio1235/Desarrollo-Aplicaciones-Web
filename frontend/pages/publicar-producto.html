@@ -4,12 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Publicar Artículo | JaguarZon UADY</title>
-    <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/componentes.css">
   <link rel="stylesheet" href="../css/publicar-producto.css">
 
   <script src="../js/api/apiAutenticacion.js" defer></script>
   <script src="../js/api/guardianRutas.js" defer></script>
+  <script src="../js/api/apiProductos.js" defer></script>
+  <script src="../js/pages/publicar.js" defer></script>
 </head>
 <body>
   <header class="main-header">
@@ -35,7 +37,7 @@
         <p>Define claramente el estado del producto y en qué campus UADY puedes entregarlo.</p>
       </header>
 
-      <form id="form-publicar-producto" action="mis-publicaciones.html" method="POST" enctype="multipart/form-data">
+      <form id="form-publicar-producto" action="productos.html" method="POST" enctype="multipart/form-data" novalidate>
         <!-- 1. Datos del artículo -->
         <fieldset class="form-section">
           <legend>1. Información del artículo</legend>
@@ -130,14 +132,14 @@
           </div>
         </fieldset>
 
+        <p id="publicar-feedback" class="feedback-msg" role="alert" aria-live="polite"></p>
+
         <div class="form-actions">
-          <a href="mis-publicaciones.html" class="btn btn-secondary">Cancelar</a>
+          <a href="productos.html" class="btn btn-secondary">Cancelar</a>
           <button type="submit" class="btn btn-primary">Publicar en JaguarZon</button>
         </div>
       </form>
     </section>
   </main>
-
-  <script src="../js/publicar.js" defer></script>
 </body>
 </html>
