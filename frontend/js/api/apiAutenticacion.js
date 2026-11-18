@@ -1,6 +1,6 @@
 
 const ApiAutenticacion = {
-  
+  // Se solicita al momento de registrar un usuario
   registrar(datosUsuario) {
     let usuarios = JSON.parse(localStorage.getItem('jz_usuarios')) || [];
     
@@ -13,7 +13,7 @@ const ApiAutenticacion = {
     localStorage.setItem('jz_usuarios', JSON.stringify(usuarios));
     return { exito: true }; 
   },
-
+  //Se solicit al momento de iniciar sesión
   iniciarSesion(correo, contrasena, mantenerActiva) {
     let usuarios = JSON.parse(localStorage.getItem('jz_usuarios')) || [];
     const usuario = usuarios.find(u => u.correo === correo && u.contrasena === contrasena);

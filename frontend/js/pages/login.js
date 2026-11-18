@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const formularioAcceso = document.getElementById('form-login');
   const mensajeRespuesta = document.getElementById('login-feedback');
 
+  
   if (formularioAcceso) {
     formularioAcceso.addEventListener('submit', (evento) => {
       evento.preventDefault();
