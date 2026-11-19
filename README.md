@@ -21,9 +21,9 @@ Contraseña de todas: `demo1234`
 
 | Correo | Vende |
 |---|---|
-| a21000001@alumnos.uady.mx@alumnos.uady.mx | Cálculo de una Variable (precio fijo) |
-| a21000002@alumnos.uady.mx@alumnos.uady.mx | Kit Arduino (subasta, cierra 7 días después de la primera visita) |
-| a21000003@alumnos.uady.mxc@alumnos.uady.mx | Bata de laboratorio (precio fijo) |
+| a21000001@alumnos.uady.mx | Cálculo de una Variable (precio fijo) |
+| a21000002@alumnos.uady.mx | Kit Arduino (subasta, cierra 7 días después de la primera visita) |
+| a21000003@alumnos.uady.mx | Bata de laboratorio (precio fijo) |
 
 También se puede crear una cuenta nueva con un correo `@alumnos.uady.mx` o `@correo.uady.mx`.
 
