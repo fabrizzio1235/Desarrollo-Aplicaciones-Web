@@ -194,21 +194,24 @@ const ApiProductos = {
 
     const nuevoProducto = {
       id: nuevoId,
-      titulo: datosNuevo.titulo,
+      titulo: String(datosNuevo.titulo || '').trim(),
       categoria: datosNuevo.categoria,
       categoriaNombre: nombresCategorias[datosNuevo.categoria] || 'Otros',
       modalidad: datosNuevo.modalidad,
       precio: datosNuevo.precio,
-      stock: datosNuevo.stock,
+      stock: Number(datosNuevo.stock),
       cierreSubasta: datosNuevo.cierreSubasta || null,
-      campus: datosNuevo.campus,
+      campus: Array.isArray(datosNuevo.campus) ? datosNuevo.campus : [],
       entregaTexto: datosNuevo.puntoFisico,
-      puntosEntrega: [datosNuevo.puntoFisico],
-      horariosEntrega: [datosNuevo.horarios],
+      puntosEntrega: String(datosNuevo.puntoFisico || '').split(',').map(x => x.trim()).filter(Boolean),
+      horariosEntrega: String(datosNuevo.horarios || '').split(',').map(x => x.trim()).filter(Boolean),
       descripcion: datosNuevo.descripcion,
-      imagen: datosNuevo.imagen || '../assets/images/image-placeholder.jpg',
-      vendedorNombre: sesion.nombre,
-      vendedorCorreo: sesion.correo,
+      imagen: datosNuevo.imagen || (Array.isArray(datosNuevo.imagenes) && datosNuevo.imagenes[0]) || '../assets/images/image-placeholder.jpg',
+      imagenes: Array.isArray(datosNuevo.imagenes) && datosNuevo.imagenes.length
+        ? datosNuevo.imagenes.slice(0, 4)
+        : [datosNuevo.imagen || '../assets/images/image-placeholder.jpg'],
+      vendedorNombre: sesion.nombre || sesion.nombreCompleto || 'Vendedor',
+      vendedorCorreo: String(sesion.correo || '').toLowerCase(),
       vendedorFacultad: `Campus: ${sesion.campus}`,
       reputacion: 5.0,
       ventasCompletadas: 0,
@@ -258,11 +261,22 @@ const ApiProductos = {
       return { exito: false, mensaje: 'El artículo no existe.' };
     }
 
-    if (cantidadSolicitada > producto.stock || producto.stock <= 0) {
+    const cantidad = Number(cantidadSolicitada);
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
+      return { exito: false, mensaje: 'La cantidad debe ser un número entero mayor que cero.' };
+    }
+    if (String(producto.vendedorCorreo || '').toLowerCase() === String(sesion.correo || '').toLowerCase()) {
+      return { exito: false, mensaje: 'No puedes solicitar la compra de tu propia publicación.' };
+    }
+    if (producto.modalidad !== 'fijo') {
+      return { exito: false, mensaje: 'Este artículo se vende mediante subasta y no admite compra directa.' };
+    }
+    if (cantidad > Number(producto.stock) || Number(producto.stock) <= 0) {
       return { exito: false, mensaje: 'No hay suficiente stock disponible.' };
     }
 
-    producto.stock -= cantidadSolicitada;
+    producto.stock -= cantidad;
+    if (producto.stock === 0) producto.estadoPublicacion = 'agotado';
     localStorage.setItem('jz_productos', JSON.stringify(productos));
 
     const datosPedidos = localStorage.getItem('jz_pedidos');
@@ -272,64 +286,128 @@ const ApiProductos = {
       idPedido: new Date().getTime(),
       idProducto: producto.id,
       tituloProducto: producto.titulo,
-      cantidad: cantidadSolicitada,
-      total: producto.precio * cantidadSolicitada,
+      cantidad: cantidad,
+      total: producto.precio * cantidad,
       puntoEntrega: puntoEntrega,
       horarioEntrega: horarioEntrega,
       compradorCorreo: sesion.correo,
       vendedorNombre: producto.vendedorNombre,
+      vendedorCorreo: producto.vendedorCorreo || '',
+      fechaCreacion: new Date().toISOString(),
       estado: 'pendiente'
     });
 
     localStorage.setItem('jz_pedidos', JSON.stringify(pedidos));
-    return { exito: true, stockRestante: producto.stock };
+    return { exito: true, pedido: pedidos[pedidos.length - 1], stockRestante: producto.stock };
   },
 
-  // Obtiene el arreglo de IDs marcados como favoritos por el usuario en sesión
+  // Permite al vendedor actualizar el estado de un pedido recibido.
+  actualizarEstadoPedido(idPedido, nuevoEstado) {
+    const sesion = ApiAutenticacion.obtenerSesion();
+    if (!sesion) return { exito: false, mensaje: 'Debes iniciar sesión.' };
+    if (!['completado', 'cancelado'].includes(nuevoEstado)) {
+      return { exito: false, mensaje: 'El estado solicitado no es válido.' };
+    }
+
+    const pedidos = JSON.parse(localStorage.getItem('jz_pedidos') || '[]');
+    const indice = pedidos.findIndex(p => String(p.idPedido) === String(idPedido));
+    if (indice < 0) return { exito: false, mensaje: 'No se encontró el pedido.' };
+    const pedido = pedidos[indice];
+    if (String(pedido.vendedorCorreo || '').toLowerCase() !== String(sesion.correo || '').toLowerCase()) {
+      return { exito: false, mensaje: 'No tienes permiso para modificar este pedido.' };
+    }
+    if (pedido.estado !== 'pendiente') {
+      return { exito: false, mensaje: 'Solo se pueden modificar pedidos pendientes.' };
+    }
+
+    pedido.estado = nuevoEstado;
+    pedido.fechaActualizacion = new Date().toISOString();
+    if (nuevoEstado === 'cancelado') {
+      const productos = this.obtenerTodosLosProductos();
+      const producto = productos.find(p => Number(p.id) === Number(pedido.idProducto));
+      if (producto) {
+        producto.stock = Number(producto.stock || 0) + Number(pedido.cantidad || 0);
+        if (producto.stock > 0) producto.estadoPublicacion = 'activa';
+        localStorage.setItem('jz_productos', JSON.stringify(productos));
+      }
+    }
+    localStorage.setItem('jz_pedidos', JSON.stringify(pedidos));
+    return { exito: true, pedido };
+  },
+
+  // Construye una clave independiente para cada cuenta institucional.
+  _claveFavoritos(correo) {
+    return `jz_favoritos_${String(correo || '').trim().toLowerCase()}`;
+  },
+
+  // Obtiene los IDs favoritos del usuario activo y normaliza IDs antiguos guardados como texto.
   obtenerIdsFavoritos() {
     const sesion = ApiAutenticacion.obtenerSesion();
-    if (!sesion) return [];
+    if (!sesion || !sesion.correo) return [];
 
-    const claveFavoritos = `jz_favoritos_${sesion.correo}`;
-    const datos = localStorage.getItem(claveFavoritos);
-    return datos ? JSON.parse(datos) : [];
+    try {
+      const datos = localStorage.getItem(this._claveFavoritos(sesion.correo));
+      const ids = datos ? JSON.parse(datos) : [];
+      if (!Array.isArray(ids)) return [];
+      return [...new Set(ids.map(Number).filter(id => Number.isFinite(id)))];
+    } catch (error) {
+      console.error('No fue posible leer los favoritos:', error);
+      return [];
+    }
   },
 
   esFavorito(idProducto) {
-    const ids = this.obtenerIdsFavoritos();
-    return ids.includes(Number(idProducto));
+    const id = Number(idProducto);
+    if (!Number.isFinite(id)) return false;
+    return this.obtenerIdsFavoritos().includes(id);
   },
 
-  // Agrega o elimina un ID de la lista de favoritos del usuario activo
+  // Agrega o elimina un producto de la lista de favoritos del usuario activo.
+  // Devuelve true si quedó agregado y false si fue retirado o no hubo sesión.
   alternarFavorito(idProducto) {
     const sesion = ApiAutenticacion.obtenerSesion();
-    if (!sesion) return false;
+    const id = Number(idProducto);
+    if (!sesion || !sesion.correo || !Number.isFinite(id)) return false;
 
-    const claveFavoritos = `jz_favoritos_${sesion.correo}`;
+    const productoExiste = this.obtenerTodosLosProductos().some(p => Number(p.id) === id);
+    if (!productoExiste) return false;
+
+    const clave = this._claveFavoritos(sesion.correo);
     const ids = this.obtenerIdsFavoritos();
-    const idNum = Number(idProducto);
+    const agregado = !ids.includes(id);
+    const nuevosIds = agregado ? [...ids, id] : ids.filter(item => item !== id);
 
-    let nuevosIds = [];
-    let agregado = false;
-
-    if (ids.includes(idNum)) {
-      nuevosIds = ids.filter(id => id !== idNum);
-      agregado = false;
-    } else {
-      ids.push(idNum);
-      nuevosIds = ids;
-      agregado = true;
+    try {
+      localStorage.setItem(clave, JSON.stringify(nuevosIds));
+      return agregado;
+    } catch (error) {
+      console.error('No fue posible guardar el favorito:', error);
+      return false;
     }
-
-    localStorage.setItem(claveFavoritos, JSON.stringify(nuevosIds));
-    return agregado;
   },
 
-  // Devuelve los objetos completos de los productos que el usuario tiene en favoritos
+  quitarFavorito(idProducto) {
+    const sesion = ApiAutenticacion.obtenerSesion();
+    const id = Number(idProducto);
+    if (!sesion || !sesion.correo || !Number.isFinite(id)) {
+      return { exito: false, mensaje: 'Inicia sesión para administrar tus favoritos.' };
+    }
+    const clave = this._claveFavoritos(sesion.correo);
+    const ids = this.obtenerIdsFavoritos().filter(item => item !== id);
+    try {
+      localStorage.setItem(clave, JSON.stringify(ids));
+      return { exito: true };
+    } catch (error) {
+      return { exito: false, mensaje: 'No fue posible actualizar tus favoritos.' };
+    }
+  },
+
+  // Devuelve los objetos completos de los productos favoritos que siguen publicados.
   obtenerProductosFavoritos() {
     const idsFavoritos = this.obtenerIdsFavoritos();
-    const todos = this.obtenerTodosLosProductos();
-    return todos.filter(p => idsFavoritos.includes(p.id));
+    if (!idsFavoritos.length) return [];
+    const conjuntoIds = new Set(idsFavoritos);
+    return this.obtenerTodosLosProductos().filter(p => conjuntoIds.has(Number(p.id)));
   }
 };
 
