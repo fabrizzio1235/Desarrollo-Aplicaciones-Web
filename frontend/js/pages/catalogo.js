@@ -43,15 +43,25 @@ document.addEventListener('DOMContentLoaded', () => {
     botonFav.type = 'button';
     botonFav.className = 'btn-fav';
     botonFav.setAttribute('data-id', producto.id);
-    botonFav.setAttribute('aria-label', 'Guardar en favoritos');
+    botonFav.setAttribute('aria-label', activoFav ? 'Quitar de favoritos' : 'Guardar en favoritos');
     botonFav.setAttribute('aria-pressed', activoFav ? 'true' : 'false');
+    botonFav.title = activoFav ? 'Quitar de favoritos' : 'Guardar en favoritos';
     botonFav.textContent = activoFav ? '♥' : '♡';
 
     botonFav.addEventListener('click', (evento) => {
+      evento.preventDefault();
+      evento.stopPropagation();
+      if (!ApiAutenticacion.obtenerSesion()) {
+        window.alert('Inicia sesión para guardar publicaciones en favoritos.');
+        window.location.href = 'login.html';
+        return;
+      }
       const idProd = evento.currentTarget.dataset.id;
       const quedoAgregado = ApiProductos.alternarFavorito(idProd);
       evento.currentTarget.textContent = quedoAgregado ? '♥' : '♡';
-      evento.currentTarget.setAttribute('aria-pressed', quedoAgregado ? 'true' : 'false');
+      evento.currentTarget.setAttribute('aria-pressed', String(quedoAgregado));
+      evento.currentTarget.setAttribute('aria-label', quedoAgregado ? 'Quitar de favoritos' : 'Guardar en favoritos');
+      evento.currentTarget.title = quedoAgregado ? 'Quitar de favoritos' : 'Guardar en favoritos';
     });
 
     figura.append(imagen, etiquetaModalidad, botonFav);

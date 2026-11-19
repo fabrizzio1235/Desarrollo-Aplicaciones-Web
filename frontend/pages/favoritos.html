@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mis Favoritos | JaguarZon UADY</title>
-    <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/componentes.css">
+  <link rel="stylesheet" href="../css/productos.css">
   <link rel="stylesheet" href="../css/favoritos.css">
 
   <script src="../js/api/apiAutenticacion.js" defer></script>
   <script src="../js/api/guardianRutas.js" defer></script>
+  <script src="../js/api/apiProductos.js" defer></script>
+  <script src="../js/pages/favoritos.js" defer></script>
 </head>
 <body>
   <header class="main-header">
@@ -32,26 +35,10 @@
     <header class="page-header">
       <h1>Artículos guardados</h1>
       <p>Publicaciones que te interesan para coordinar compra en tu campus.</p>
+      <p id="favoritos-contador" class="muted-text" aria-live="polite"></p>
     </header>
 
-    <section class="product-grid" id="lista-favoritos" aria-label="Lista de productos favoritos">
-      <article class="product-card" data-producto-id="103">
-        <figure class="product-media">
-          <img src="../assets/placeholder-bata.jpg" alt="Bata de laboratorio talla M">
-          <span class="tag tag-fijo">Precio fijo</span>
-        </figure>
-        <div class="product-body">
-          <span class="product-category">Material de laboratorio</span>
-          <h2 class="product-title"><a href="detalle-producto.html?id=103">Bata de Laboratorio 100% Algodón Talla M</a></h2>
-          <p class="product-price">$220.00 MXN</p>
-          <p class="product-delivery"><strong>Entrega:</strong> Campus Ciencias de la Salud</p>
-          <div class="card-actions">
-            <a href="detalle-producto.html?id=103" class="btn btn-primary btn-sm">Ver y coordinar</a>
-            <button type="button" class="btn btn-outline btn-sm" data-action="quitar-favorito">Quitar</button>
-          </div>
-        </div>
-      </article>
-    </section>
+    <section class="product-grid" id="lista-favoritos" aria-label="Lista de productos favoritos"></section>
 
     <section id="favoritos-vacio" class="empty-state" hidden>
       <h2>Aún no tienes artículos guardados</h2>
@@ -59,7 +46,5 @@
       <a href="productos.html" class="btn btn-primary">Ir al catálogo</a>
     </section>
   </main>
-
-  <script src="../js/favoritos.js" defer></script>
 </body>
 </html>
