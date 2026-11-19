@@ -1,11 +1,72 @@
 
+const NOMBRES_CAMPUS = {
+  exactas: 'Campus de Ciencias Exactas e Ingenierías',
+  salud: 'Campus de Ciencias de la Salud',
+  sociales: 'Campus de Ciencias Sociales y Humanidades',
+  biologicas: 'Campus de Ciencias Biológicas y Agropecuarias',
+  arquitectura: 'Campus de Arquitectura, Hábitat y Arte'
+};
+
+const MENSAJE_SIN_ESPACIO = 'No hay espacio disponible en el navegador. Elimina publicaciones antiguas o usa menos fotografías.';
+
 const ApiProductos = {
-  // Inicializa los 3 artículos de prueba en localStorage si aún no existen[cite: 45]
+  // Da formato YYYY-MM-DDTHH:mm (el mismo que usa <input type="datetime-local">)
+  _formatoFechaLocal(fecha) {
+    const dos = n => String(n).padStart(2, '0');
+    return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}T${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`;
+  },
+
+  // Lee los productos tal como están guardados y reconstruye la imagen principal
+  _leerProductos() {
+    const datos = localStorage.getItem('jz_productos');
+    const productos = datos ? JSON.parse(datos) : [];
+    productos.forEach(p => {
+      if (!p.imagen) {
+        p.imagen = (Array.isArray(p.imagenes) && p.imagenes[0]) || '../assets/images/image-placeholder.jpg';
+      }
+    });
+    return productos;
+  },
+
+  // Guarda los productos sin duplicar la foto principal (ahorra espacio en localStorage).
+  // Devuelve false si el navegador no tiene espacio.
+  _guardarProductos(productos) {
+    const compactos = productos.map(p => {
+      if (Array.isArray(p.imagenes) && p.imagenes.length && p.imagen === p.imagenes[0]) {
+        const { imagen, ...resto } = p;
+        return resto;
+      }
+      return p;
+    });
+    try {
+      localStorage.setItem('jz_productos', JSON.stringify(compactos));
+      return true;
+    } catch (error) {
+      console.error('No fue posible guardar los productos:', error);
+      return false;
+    }
+  },
+
+  // Resumen público de un vendedor calculado con sus reseñas y pedidos reales
+  obtenerResumenVendedor(correo) {
+    const normalizado = String(correo || '').toLowerCase();
+    const reputacion = ApiAutenticacion.obtenerReputacion(normalizado);
+    const pedidos = JSON.parse(localStorage.getItem('jz_pedidos') || '[]');
+    const ventas = pedidos.filter(p =>
+      String(p.vendedorCorreo || '').toLowerCase() === normalizado && p.estado === 'completado'
+    ).length;
+    return { promedio: reputacion.promedio, totalResenas: reputacion.total, ventas };
+  },
+
+  // Inicializa los 3 artículos de prueba en localStorage si aún no existen
   inicializarDefecto() {
     const datosExistentes = localStorage.getItem('jz_productos');
     if (datosExistentes) {
       return;
     }
+
+    // La subasta de ejemplo cierra siempre 7 días después de la primera visita
+    const cierreDemo = this._formatoFechaLocal(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
     const productosDefecto = [
       {
@@ -33,8 +94,6 @@ const ApiProductos = {
         vendedorNombre: 'Ana Sofía Martínez',
         vendedorCorreo: 'anasofia@alumnos.uady.mx',
         vendedorFacultad: 'Facultad de Ingeniería (FIUADY)',
-        reputacion: 4.9,
-        ventasCompletadas: 14,
         fechaCreacion: 1731680000000
       },
       {
@@ -45,7 +104,7 @@ const ApiProductos = {
         modalidad: 'subasta',
         precio: 280.00,
         stock: 1,
-        cierreSubasta: '2026-11-25T18:00',
+        cierreSubasta: cierreDemo,
         campus: ['exactas', 'salud'],
         entregaTexto: 'Exactas / Ciencias de la Salud',
         puntosEntrega: [
@@ -60,8 +119,6 @@ const ApiProductos = {
         vendedorNombre: 'Luis Fernando R.',
         vendedorCorreo: 'luis.r@alumnos.uady.mx',
         vendedorFacultad: 'Facultad de Matemáticas (FMAT)',
-        reputacion: 5.0,
-        ventasCompletadas: 8,
         fechaCreacion: 1731760000000
       },
       {
@@ -87,8 +144,6 @@ const ApiProductos = {
         vendedorNombre: 'Valeria C.',
         vendedorCorreo: 'valeria.c@alumnos.uady.mx',
         vendedorFacultad: 'Facultad de Química',
-        reputacion: 4.8,
-        ventasCompletadas: 21,
         fechaCreacion: 1731840000000
       }
     ];
@@ -99,8 +154,7 @@ const ApiProductos = {
   // Devuelve el arreglo completo de productos
   obtenerTodosLosProductos() {
     this.inicializarDefecto();
-    const datos = localStorage.getItem('jz_productos');
-    return datos ? JSON.parse(datos) : [];
+    return this._leerProductos();
   },
 
   // Busca un producto específico por su ID numérico
@@ -164,7 +218,13 @@ const ApiProductos = {
     } else if (criterios.orden === 'precio-desc') {
       productos.sort((a, b) => b.precio - a.precio);
     } else if (criterios.orden === 'reputacion') {
-      productos.sort((a, b) => b.reputacion - a.reputacion);
+      const promedios = new Map();
+      productos.forEach(p => {
+        if (!promedios.has(p.vendedorCorreo)) {
+          promedios.set(p.vendedorCorreo, this.obtenerResumenVendedor(p.vendedorCorreo).promedio);
+        }
+      });
+      productos.sort((a, b) => promedios.get(b.vendedorCorreo) - promedios.get(a.vendedorCorreo));
     } else {
       productos.sort((a, b) => b.fechaCreacion - a.fechaCreacion);
     }
@@ -180,6 +240,7 @@ const ApiProductos = {
     }
 
     const productos = this.obtenerTodosLosProductos();
+    const usuario = ApiAutenticacion.obtenerUsuarioActual() || sesion;
 
     const nombresCategorias = {
       libros: 'Libros',
@@ -212,14 +273,14 @@ const ApiProductos = {
         : [datosNuevo.imagen || '../assets/images/image-placeholder.jpg'],
       vendedorNombre: sesion.nombre || sesion.nombreCompleto || 'Vendedor',
       vendedorCorreo: String(sesion.correo || '').toLowerCase(),
-      vendedorFacultad: `Campus: ${sesion.campus}`,
-      reputacion: 5.0,
-      ventasCompletadas: 0,
+      vendedorFacultad: usuario.facultad || NOMBRES_CAMPUS[usuario.campus] || 'Comunidad UADY',
       fechaCreacion: nuevoId
     };
 
     productos.push(nuevoProducto);
-    localStorage.setItem('jz_productos', JSON.stringify(productos));
+    if (!this._guardarProductos(productos)) {
+      return { exito: false, mensaje: MENSAJE_SIN_ESPACIO };
+    }
     return { exito: true, producto: nuevoProducto };
   },
 
@@ -243,7 +304,9 @@ const ApiProductos = {
     }
 
     producto.precio = nuevoMonto;
-    localStorage.setItem('jz_productos', JSON.stringify(productos));
+    if (!this._guardarProductos(productos)) {
+      return { exito: false, mensaje: MENSAJE_SIN_ESPACIO };
+    }
     return { exito: true, nuevoPrecio: producto.precio };
   },
 
@@ -277,7 +340,9 @@ const ApiProductos = {
 
     producto.stock -= cantidad;
     if (producto.stock === 0) producto.estadoPublicacion = 'agotado';
-    localStorage.setItem('jz_productos', JSON.stringify(productos));
+    if (!this._guardarProductos(productos)) {
+      return { exito: false, mensaje: MENSAJE_SIN_ESPACIO };
+    }
 
     const datosPedidos = localStorage.getItem('jz_pedidos');
     const pedidos = datosPedidos ? JSON.parse(datosPedidos) : [];
@@ -328,7 +393,7 @@ const ApiProductos = {
       if (producto) {
         producto.stock = Number(producto.stock || 0) + Number(pedido.cantidad || 0);
         if (producto.stock > 0) producto.estadoPublicacion = 'activa';
-        localStorage.setItem('jz_productos', JSON.stringify(productos));
+        this._guardarProductos(productos);
       }
     }
     localStorage.setItem('jz_pedidos', JSON.stringify(pedidos));

@@ -5,6 +5,32 @@ const ApiAutenticacion = {
     catch { return defecto; }
   },
 
+  // Crea las cuentas de los vendedores de ejemplo para poder probar el ciclo completo
+  // (pedido -> entrega -> reseña). Contraseña de todas las cuentas demo: demo1234
+  inicializarUsuariosDemo() {
+    const usuarios = this._leer('jz_usuarios');
+    const cuentasDemo = [
+      { nombre: 'Ana Sofía Martínez', correo: 'anasofia@alumnos.uady.mx', campus: 'exactas', facultad: 'Facultad de Ingeniería (FIUADY)' },
+      { nombre: 'Luis Fernando R.', correo: 'luis.r@alumnos.uady.mx', campus: 'exactas', facultad: 'Facultad de Matemáticas (FMAT)' },
+      { nombre: 'Valeria C.', correo: 'valeria.c@alumnos.uady.mx', campus: 'salud', facultad: 'Facultad de Química' }
+    ];
+    let huboCambios = false;
+    cuentasDemo.forEach(cuenta => {
+      if (usuarios.some(u => String(u.correo).toLowerCase() === cuenta.correo)) return;
+      usuarios.push({
+        ...cuenta,
+        contrasena: 'demo1234',
+        descripcion: 'Cuenta de demostración de JaguarZon.',
+        foto: '',
+        fechaRegistro: new Date().toISOString(),
+        puntosFrecuentes: '',
+        horariosHabituales: ''
+      });
+      huboCambios = true;
+    });
+    if (huboCambios) localStorage.setItem('jz_usuarios', JSON.stringify(usuarios));
+  },
+
   registrar(datosUsuario) {
     const usuarios = this._leer('jz_usuarios');
     const correo = String(datosUsuario.correo || '').trim().toLowerCase();
@@ -122,3 +148,5 @@ const ApiAutenticacion = {
     return { exito: true };
   }
 };
+
+ApiAutenticacion.inicializarUsuariosDemo();

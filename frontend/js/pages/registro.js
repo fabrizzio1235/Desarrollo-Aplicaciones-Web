@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Expresión Regular en JavaScript
       const regexUady = /^[a-zA-Z0-9._%+-]+@(alumnos\.uady\.mx|correo\.uady\.mx)$/;
       if (!regexUady.test(correo)) {
-        mensajeRespuesta.textContent = 'Acceso denegado: Solo se permiten correos @alumnos.uady.mx';
+        mensajeRespuesta.textContent = 'Acceso denegado: solo se permiten correos @alumnos.uady.mx o @correo.uady.mx';
         mensajeRespuesta.style.color = '#dc3545';
         return; 
       }

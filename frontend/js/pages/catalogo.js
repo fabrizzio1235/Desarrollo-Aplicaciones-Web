@@ -107,7 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
     spanVendedor.textContent = producto.vendedorNombre;
     const spanRating = document.createElement('span');
     spanRating.className = 'rating';
-    spanRating.textContent = `★ ${producto.reputacion} (${producto.ventasCompletadas})`;
+    const resumenVendedor = ApiProductos.obtenerResumenVendedor(producto.vendedorCorreo);
+    spanRating.textContent = resumenVendedor.totalResenas
+      ? `★ ${resumenVendedor.promedio.toFixed(1)} (${resumenVendedor.totalResenas})`
+      : 'Sin calificaciones';
     pieVendedor.append(spanVendedor, spanRating);
 
     // Si es subasta, incluimos el reloj de cierre definido en productos.css

@@ -78,14 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const imagen = new Image();
         imagen.onerror = () => reject(new Error('Uno de los archivos seleccionados no es una imagen válida.'));
         imagen.onload = () => {
-          const limite = 1200;
+          const limite = 900;
           const escala = Math.min(1, limite / Math.max(imagen.width, imagen.height));
           const canvas = document.createElement('canvas');
           canvas.width = Math.max(1, Math.round(imagen.width * escala));
           canvas.height = Math.max(1, Math.round(imagen.height * escala));
           const contexto = canvas.getContext('2d');
           contexto.drawImage(imagen, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', 0.72));
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
         };
         imagen.src = lector.result;
       };
