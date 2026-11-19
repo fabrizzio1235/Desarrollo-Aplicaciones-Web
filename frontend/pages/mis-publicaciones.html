@@ -10,6 +10,7 @@
 
   <script src="../js/api/apiAutenticacion.js" defer></script>
   <script src="../js/api/guardianRutas.js" defer></script>
+  <script src="../js/api/apiProductos.js" defer></script>
 </head>
 <body>
   <header class="main-header">
@@ -54,28 +55,7 @@
             </tr>
           </thead>
           <tbody id="tabla-pedidos-vendedor">
-            <tr data-pedido-id="501" data-estado="pendiente">
-              <td><strong>Cálculo de una Variable - Stewart</strong> (x1)</td>
-              <td>Jorge Alberto K.<br><small>a19203411@alumnos.uady.mx</small></td>
-              <td>Cafetería FIUADY<br><small>Lun 11:00 AM</small></td>
-              <td>$350.00</td>
-              <td><span class="status-badge status-pendiente">Pendiente de entrega</span></td>
-              <td class="table-actions">
-                <button type="button" class="btn btn-success btn-sm" data-action="completar">Marcar entregado</button>
-                <button type="button" class="btn btn-danger btn-sm" data-action="cancelar">Cancelar</button>
-                <a href="mensajes.html?pedido=501" class="btn btn-secondary btn-sm">Chat</a>
-              </td>
-            </tr>
-            <tr data-pedido-id="498" data-estado="completado">
-              <td><strong>Compás de precisión Staedtler</strong> (x1)</td>
-              <td>Mariana G.<br><small>a21208890@alumnos.uady.mx</small></td>
-              <td>Explanada Arquitectura<br><small>Completado el 12 Nov</small></td>
-              <td>$180.00</td>
-              <td><span class="status-badge status-completado">Entregado / Completado</span></td>
-              <td class="table-actions">
-                <span>Transacción cerrada</span>
-              </td>
-            </tr>
+            <tr><td colspan="6">Cargando pedidos...</td></tr>
           </tbody>
         </table>
       </div>
@@ -86,22 +66,11 @@
       <h2 id="mis-articulos-titulo">Mis publicaciones activas</h2>
 
       <div class="listings-list" id="lista-mis-publicaciones">
-        <article class="listing-row" data-producto-id="101">
-          <img src="../assets/placeholder-libro.jpg" alt="Cálculo de una Variable">
-          <div class="listing-info">
-            <h3><a href="detalle-producto.html?id=101">Cálculo de una Variable - James Stewart (8ª Ed.)</a></h3>
-            <p>Modalidad: <strong>Precio fijo ($350.00 MXN)</strong> · Stock restante: <strong>2</strong></p>
-            <p><small>Entrega en: Campus Ciencias Exactas e Ingenierías</small></p>
-          </div>
-          <div class="listing-actions">
-            <a href="publicar-producto.html?edit=101" class="btn btn-secondary btn-sm">Editar</a>
-            <button type="button" class="btn btn-outline-danger btn-sm" data-action="eliminar">Dar de baja</button>
-          </div>
-        </article>
+        <p>Cargando tus publicaciones...</p>
       </div>
     </section>
   </main>
 
-  <script src="../js/mis-publicaciones.js" defer></script>
+  <script src="../js/pages/mis-publicaciones.js" defer></script>
 </body>
 </html>

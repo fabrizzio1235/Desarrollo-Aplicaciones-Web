@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputPuntoFisico = document.getElementById('prod-punto-fisico');
   const inputHorarios = document.getElementById('prod-horarios');
   const mensajeFeedback = document.getElementById('publicar-feedback');
+  const contenedorVistaPrevia = document.getElementById('prod-fotos-preview');
+  const MAX_FOTOGRAFIAS = 4;
+  // Mantiene una selección acumulada aunque el usuario abra el selector varias veces.
+  let fotografiasSeleccionadas = [];
 
   // Ajusta visibilidad del cierre de subasta y bloquea el stock en 1 cuando es subasta
   function actualizarInterfazModalidad(modalidadSeleccionada) {
@@ -52,15 +56,113 @@ document.addEventListener('DOMContentLoaded', () => {
       categoria: selectCategoria.value,
       stock: textoStock !== '' ? Number(textoStock) : NaN,
       descripcion: inputDescripcion.value.trim(),
-      cantidadFotos: inputFotos && inputFotos.files ? inputFotos.files.length : 0,
+      cantidadFotos: fotografiasSeleccionadas.length,
       modalidad: modalidad,
       precio: textoPrecio !== '' ? Number(textoPrecio) : NaN,
       cierreSubasta: modalidad === 'subasta' ? inputCierreSubasta.value.trim() : null,
       campus: campusSeleccionados,
       puntoFisico: inputPuntoFisico.value.trim(),
       horarios: inputHorarios.value.trim(),
-      imagen: '../assets/images/image-placeholder.jpg'
+      imagen: '../assets/images/image-placeholder.jpg',
+      imagenes: []
     };
+  }
+
+  // Convierte las fotografías seleccionadas a imágenes JPEG optimizadas para localStorage.
+  function procesarFotografia(archivo) {
+    return new Promise((resolve, reject) => {
+      if (!archivo) { resolve('../assets/images/image-placeholder.jpg'); return; }
+      const lector = new FileReader();
+      lector.onerror = () => reject(new Error('No fue posible leer una de las fotografías.'));
+      lector.onload = () => {
+        const imagen = new Image();
+        imagen.onerror = () => reject(new Error('Uno de los archivos seleccionados no es una imagen válida.'));
+        imagen.onload = () => {
+          const limite = 1200;
+          const escala = Math.min(1, limite / Math.max(imagen.width, imagen.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(imagen.width * escala));
+          canvas.height = Math.max(1, Math.round(imagen.height * escala));
+          const contexto = canvas.getContext('2d');
+          contexto.drawImage(imagen, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.72));
+        };
+        imagen.src = lector.result;
+      };
+      lector.readAsDataURL(archivo);
+    });
+  }
+
+  async function procesarFotografias(archivos) {
+    return Promise.all(Array.from(archivos || []).slice(0, MAX_FOTOGRAFIAS).map(procesarFotografia));
+  }
+
+  // Dibuja miniaturas de las fotografías acumuladas y permite retirar cada una.
+  function actualizarVistaPreviaFotografias() {
+    if (!contenedorVistaPrevia) return;
+    contenedorVistaPrevia.replaceChildren();
+    contenedorVistaPrevia.hidden = fotografiasSeleccionadas.length === 0;
+
+    fotografiasSeleccionadas.forEach((archivo, indice) => {
+      const tarjeta = document.createElement('div');
+      tarjeta.className = 'foto-preview-item';
+
+      const imagen = document.createElement('img');
+      imagen.src = URL.createObjectURL(archivo);
+      imagen.alt = `Vista previa de la fotografía ${indice + 1}`;
+      imagen.onload = () => URL.revokeObjectURL(imagen.src);
+
+      const pie = document.createElement('div');
+      pie.className = 'foto-preview-footer';
+      const nombre = document.createElement('span');
+      nombre.textContent = archivo.name;
+      nombre.title = archivo.name;
+
+      const quitar = document.createElement('button');
+      quitar.type = 'button';
+      quitar.className = 'foto-preview-remove';
+      quitar.textContent = 'Quitar';
+      quitar.setAttribute('aria-label', `Quitar ${archivo.name}`);
+      quitar.addEventListener('click', () => {
+        fotografiasSeleccionadas.splice(indice, 1);
+        actualizarVistaPreviaFotografias();
+      });
+
+      pie.append(nombre, quitar);
+      tarjeta.append(imagen, pie);
+      contenedorVistaPrevia.appendChild(tarjeta);
+    });
+
+    const contador = document.createElement('p');
+    contador.className = 'foto-preview-count';
+    contador.textContent = `${fotografiasSeleccionadas.length} de ${MAX_FOTOGRAFIAS} fotografías seleccionadas`;
+    contenedorVistaPrevia.appendChild(contador);
+  }
+
+  if (inputFotos) {
+    inputFotos.addEventListener('change', () => {
+      const nuevas = Array.from(inputFotos.files || []);
+      const repetidas = nuevas.filter(nueva => fotografiasSeleccionadas.some(actual =>
+        actual.name === nueva.name && actual.size === nueva.size && actual.lastModified === nueva.lastModified
+      ));
+      const unicas = nuevas.filter(nueva => !repetidas.includes(nueva));
+      const disponibles = MAX_FOTOGRAFIAS - fotografiasSeleccionadas.length;
+
+      if (unicas.length > disponibles) {
+        mostrarMensajeError(`Solo puedes publicar hasta ${MAX_FOTOGRAFIAS} fotografías. Ya tienes ${fotografiasSeleccionadas.length} seleccionadas.`);
+      } else if (unicas.length) {
+        fotografiasSeleccionadas.push(...unicas);
+        mostrarMensajeError('');
+      }
+
+      if (repetidas.length) {
+        mostrarMensajeError('Una o más fotografías ya estaban seleccionadas; no se agregaron duplicados.');
+      }
+
+      // Vaciar el input permite volver a seleccionar archivos y acumularlos.
+      inputFotos.value = '';
+      actualizarVistaPreviaFotografias();
+    });
   }
 
   // Valida las reglas de negocio; devuelve el mensaje de error o null si todo es válido
@@ -125,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    formularioPublicar.addEventListener('submit', (evento) => {
+    formularioPublicar.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       mostrarMensajeError('');
 
@@ -134,6 +236,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (errorValidacion !== null) {
         mostrarMensajeError(errorValidacion);
+        return;
+      }
+
+      try {
+        if (fotografiasSeleccionadas.length) {
+          datosNuevoProducto.imagenes = await procesarFotografias(fotografiasSeleccionadas);
+          datosNuevoProducto.imagen = datosNuevoProducto.imagenes[0] || '../assets/images/image-placeholder.jpg';
+        }
+      } catch (error) {
+        mostrarMensajeError(error.message || 'No fue posible procesar la fotografía.');
         return;
       }
 
