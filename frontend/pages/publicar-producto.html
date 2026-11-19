@@ -74,7 +74,9 @@
 
           <div class="form-group">
             <label for="prod-fotos">Fotografías del artículo (máx. 4 imágenes)</label>
-            <input type="file" id="prod-fotos" name="fotos" accept="image/png, image/jpeg, image/webp" multiple required>
+            <input type="file" id="prod-fotos" name="fotos" accept="image/png, image/jpeg, image/webp" multiple>
+            <small class="form-help">Puedes agregar fotografías en varias selecciones. Máximo 4 imágenes.</small>
+            <div id="prod-fotos-preview" class="foto-preview-grid" aria-live="polite" hidden></div>
           </div>
         </fieldset>
 

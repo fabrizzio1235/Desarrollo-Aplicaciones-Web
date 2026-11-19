@@ -4,6 +4,41 @@
   margin: 30px auto 60px;
 }
 
+/* Encabezado de la página */
+.profile-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.profile-page-heading h1 {
+  margin-bottom: 6px;
+  font-size: 1.8rem;
+}
+
+.profile-page-heading p {
+  margin: 0;
+  font-size: .88rem;
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: var(--azul);
+  font-size: .72rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Tarjeta principal e identidad del usuario */
+.profile-header-card,
+.profile-card {
+  border: 1px solid var(--borde);
+  border-radius: 7px;
+  background: white;
+}
+
 .profile-header-card {
   display: flex;
   align-items: center;
@@ -11,53 +46,82 @@
   gap: 22px;
   padding: 22px;
   margin-bottom: 22px;
-  border: 1px solid var(--borde);
-  border-radius: 7px;
-  background: white;
 }
 
 .profile-identity {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
-.avatar-placeholder {
+.profile-avatar {
   display: grid;
-  width: 72px;
-  height: 72px;
-  flex: 0 0 72px;
+  width: 82px;
+  height: 82px;
+  flex: 0 0 82px;
   place-items: center;
   border: 2px solid #d5e0e8;
   border-radius: 50%;
-  background: #e8f0f6;
+  background-color: #e8f0f6;
+  background-position: center;
+  background-size: cover;
   color: var(--azul-oscuro);
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   font-weight: bold;
 }
 
-.profile-identity h1 {
-  margin-bottom: 5px;
-  font-size: 1.55rem;
+.profile-avatar.has-photo {
+  font-size: 0;
 }
 
-.profile-identity p {
-  margin: 4px 0;
-  font-size: .82rem;
+.profile-identity h2 {
+  margin: 0 0 5px;
+  font-size: 1.45rem;
 }
 
 .institutional-email {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 7px;
+  margin: 4px 0 8px;
+  color: var(--texto-suave);
+  font-size: .84rem;
+  overflow-wrap: anywhere;
 }
 
+.profile-campus,
+.profile-faculty {
+  margin: 4px 0;
+  color: var(--texto-suave);
+  font-size: .82rem;
+}
+
+.profile-description {
+  max-width: 600px;
+  margin: 10px 0 0;
+  color: #536171;
+  font-size: .86rem;
+  line-height: 1.5;
+}
+
+.verified-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #b9d9c9;
+  border-radius: 4px;
+  background: #eaf5ef;
+  color: #286b4b;
+  font-size: .72rem;
+  font-weight: bold;
+}
+
+/* Reputación del vendedor */
 .profile-reputation {
   display: flex;
+  min-width: 185px;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 5px;
+  padding-left: 22px;
+  border-left: 1px solid var(--borde);
   text-align: right;
 }
 
@@ -73,10 +137,14 @@
 }
 
 .profile-reputation small {
-  margin-bottom: 6px;
   font-size: .72rem;
 }
 
+.profile-reputation .btn {
+  margin-top: 6px;
+}
+
+/* Distribución de las secciones del perfil */
 .profile-grid {
   display: grid;
   grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
@@ -87,17 +155,108 @@
 .profile-card {
   min-width: 0;
   padding: 20px;
-  border: 1px solid var(--borde);
-  border-radius: 7px;
-  background: white;
+  margin-bottom: 22px;
 }
 
 .profile-card h2 {
-  margin-bottom: 17px;
+  margin: 0 0 17px;
   font-size: 1.18rem;
 }
 
-.orders-list {
+.profile-card h3 {
+  margin: 21px 0 10px;
+  font-size: 1rem;
+}
+
+/* Datos personales de la cuenta */
+.account-data {
+  padding: 0;
+  margin: 0;
+}
+
+.account-data > div {
+  padding: 11px 0;
+  border-bottom: 1px solid #e9edf0;
+}
+
+.account-data > div:last-child {
+  border-bottom: 0;
+}
+
+.account-data dt {
+  margin-bottom: 4px;
+  color: var(--texto-suave);
+  font-size: .78rem;
+}
+
+.account-data dd {
+  margin: 0;
+  color: var(--texto);
+  font-size: .86rem;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+/* Encabezados y filtros del historial de pedidos */
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-heading h2 {
+  margin: 0 0 4px;
+}
+
+.section-heading p,
+.section-help {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: .84rem;
+}
+
+.count-pill {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--azul-claro);
+  color: var(--azul-oscuro);
+  font-size: .8rem;
+  font-weight: bold;
+}
+
+.order-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.filter-chip {
+  padding: 6px 11px;
+  border: 1px solid #cbd5df;
+  border-radius: 5px;
+  background: white;
+  color: #455568;
+  font-size: .8rem;
+  cursor: pointer;
+}
+
+.filter-chip:hover {
+  background: var(--azul-claro);
+  color: var(--azul-oscuro);
+}
+
+.filter-chip.active {
+  border-color: var(--azul);
+  background: var(--azul);
+  color: white;
+}
+
+/* Lista de pedidos */
+.orders-list,
+.received-reviews {
   display: grid;
   gap: 10px;
   padding: 0;
@@ -116,6 +275,10 @@
   background: #fafbfc;
 }
 
+.order-details {
+  min-width: 0;
+}
+
 .order-details strong {
   display: block;
   margin-bottom: 4px;
@@ -125,13 +288,208 @@
 
 .order-details p {
   margin: 0 0 6px;
+  color: var(--texto-suave);
+  font-size: .76rem;
+  overflow-wrap: anywhere;
+}
+
+.order-details .order-meta {
   font-size: .76rem;
 }
 
-.order-actions {
-  flex: 0 0 auto;
+.status-badge {
+  display: inline-block;
+  padding: 5px 8px;
+  margin-top: 3px;
+  border-radius: 4px;
+  font-size: .72rem;
+  font-weight: bold;
 }
 
+.status-pendiente {
+  background: #fff2d8;
+  color: #94600e;
+}
+
+.status-completado {
+  background: #e6f3eb;
+  color: #26704d;
+}
+
+.status-cancelado {
+  background: #fbe9e8;
+  color: #a13f3c;
+}
+
+.order-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-done {
+  color: #26704d;
+  font-size: .78rem;
+  font-weight: bold;
+}
+
+/* Estados vacíos */
+.empty-orders {
+  padding: 28px 12px;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+.empty-orders strong {
+  color: var(--azul-oscuro);
+}
+
+.empty-orders p {
+  margin: 6px 0 14px;
+  font-size: .86rem;
+}
+
+.muted-text {
+  color: var(--texto-suave);
+  font-size: .84rem;
+}
+
+/* Reseñas recibidas */
+.reviews-card {
+  margin-top: 0;
+}
+
+.received-reviews {
+  gap: 0;
+}
+
+.received-review {
+  padding: 14px 0;
+  border-top: 1px solid #e9edf0;
+}
+
+.review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.review-heading strong {
+  color: var(--azul-oscuro);
+  font-size: .86rem;
+}
+
+.review-stars {
+  color: #a27613;
+  letter-spacing: 1px;
+}
+
+.received-review p {
+  margin: 7px 0;
+  color: #536171;
+  font-size: .86rem;
+}
+
+.received-review small {
+  font-size: .72rem;
+}
+
+/* Ventanas modales para editar el perfil y calificar vendedores */
+.profile-dialog {
+  width: min(540px, calc(100% - 28px));
+  max-height: 90vh;
+  padding: 25px;
+  overflow-y: auto;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 8px 28px rgba(28, 51, 72, .2);
+}
+
+.profile-dialog::backdrop {
+  background: rgba(23, 54, 80, .5);
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dialog-heading h2,
+.profile-dialog h2 {
+  margin-bottom: 0;
+  font-size: 1.3rem;
+}
+
+.icon-close {
+  padding: 0 5px;
+  border: 0;
+  background: transparent;
+  color: var(--texto-suave);
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.icon-close:hover {
+  color: var(--azul-oscuro);
+}
+
+.profile-dialog .form-group {
+  margin: 14px 0;
+}
+
+.profile-dialog .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #34475a;
+  font-size: .88rem;
+  font-weight: bold;
+}
+
+.profile-dialog input:not([type="file"]),
+.profile-dialog select,
+.profile-dialog textarea {
+  width: 100%;
+}
+
+.profile-dialog input[type="file"] {
+  width: 100%;
+  font-size: .82rem;
+}
+
+.profile-dialog .form-group small {
+  display: block;
+  margin-top: 5px;
+  font-size: .74rem;
+}
+
+.photo-preview {
+  width: 82px;
+  height: 82px;
+  margin-top: 10px;
+  border: 1px solid var(--borde);
+  border-radius: 50%;
+  background: #edf1f4;
+  object-fit: cover;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.profile-dialog .feedback-msg {
+  margin: 0 0 10px;
+}
+
+/* Adaptación para tabletas */
 @media (max-width: 800px) {
   .profile-grid {
     grid-template-columns: 1fr;
@@ -143,15 +501,29 @@
   }
 
   .profile-reputation {
+    width: 100%;
     align-items: flex-start;
+    padding: 16px 0 0;
+    border-top: 1px solid var(--borde);
+    border-left: 0;
     text-align: left;
   }
 }
 
+/* Adaptación para dispositivos móviles */
 @media (max-width: 560px) {
   .profile-container {
     width: calc(100% - 24px);
     margin-top: 20px;
+  }
+
+  .profile-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-page-heading .btn {
+    width: 100%;
   }
 
   .profile-header-card,
@@ -164,15 +536,19 @@
     gap: 11px;
   }
 
-  .avatar-placeholder {
-    width: 58px;
-    height: 58px;
-    flex-basis: 58px;
-    font-size: 1.1rem;
+  .profile-avatar {
+    width: 62px;
+    height: 62px;
+    flex-basis: 62px;
+    font-size: 1.15rem;
   }
 
-  .profile-identity h1 {
-    font-size: 1.25rem;
+  .profile-identity h2 {
+    font-size: 1.2rem;
+  }
+
+  .profile-grid {
+    gap: 0;
   }
 
   .order-item {
@@ -182,6 +558,19 @@
 
   .order-actions,
   .order-actions .btn {
+    width: 100%;
+  }
+
+  .order-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .dialog-actions .btn {
     width: 100%;
   }
 }
