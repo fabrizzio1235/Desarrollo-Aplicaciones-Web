@@ -101,7 +101,7 @@ const ApiProductos = {
         descripcion: 'Libro en excelente estado, sin páginas subrayadas ni roturas. Ideal para Cálculo Diferencial e Integral en FIUADY o FMAT.',
         imagen: '../assets/images/image-placeholder.jpg',
         vendedorNombre: 'Ana Sofía Martínez',
-        vendedorCorreo: 'anasofia@alumnos.uady.mx',
+        vendedorCorreo: 'a21000001@alumnos.uady.mx',
         vendedorFacultad: 'Facultad de Ingeniería (FIUADY)',
         fechaCreacion: 1731680000000
       },
@@ -126,7 +126,7 @@ const ApiProductos = {
         descripcion: 'Kit completo usado un solo semestre. Incluye placa Uno R3, cable USB, protoboard, jumpers y sensor ultrasónico.',
         imagen: '../assets/images/image-placeholder.jpg',
         vendedorNombre: 'Luis Fernando R.',
-        vendedorCorreo: 'luis.r@alumnos.uady.mx',
+        vendedorCorreo: 'a21000002@alumnos.uady.mx',
         vendedorFacultad: 'Facultad de Matemáticas (FMAT)',
         fechaCreacion: 1731760000000
       },
@@ -151,7 +151,7 @@ const ApiProductos = {
         descripcion: 'Bata reglamentaria de algodón grueso, sin manchas de reactivos. Talla mediana.',
         imagen: '../assets/images/image-placeholder.jpg',
         vendedorNombre: 'Valeria C.',
-        vendedorCorreo: 'valeria.c@alumnos.uady.mx',
+        vendedorCorreo: 'a21000003@alumnos.uady.mx',
         vendedorFacultad: 'Facultad de Química',
         fechaCreacion: 1731840000000
       }

@@ -21,16 +21,16 @@ Contraseña de todas: `demo1234`
 
 | Correo | Vende |
 |---|---|
-| anasofia@alumnos.uady.mx | Cálculo de una Variable (precio fijo) |
-| luis.r@alumnos.uady.mx | Kit Arduino (subasta, cierra 7 días después de la primera visita) |
-| valeria.c@alumnos.uady.mx | Bata de laboratorio (precio fijo) |
+| a21000001@alumnos.uady.mx@alumnos.uady.mx | Cálculo de una Variable (precio fijo) |
+| a21000002@alumnos.uady.mx@alumnos.uady.mx | Kit Arduino (subasta, cierra 7 días después de la primera visita) |
+| a21000003@alumnos.uady.mxc@alumnos.uady.mx | Bata de laboratorio (precio fijo) |
 
 También se puede crear una cuenta nueva con un correo `@alumnos.uady.mx` o `@correo.uady.mx`.
 
 ## Guion de demostración (ciclo completo)
 1. Crear una cuenta, iniciar sesión y explorar el catálogo (filtros, búsqueda, favoritos).
 2. Abrir un producto de precio fijo, **solicitar la compra** y pulsar «Ir al chat del pedido».
-3. Cerrar sesión (botón «Salir») e iniciar como el vendedor (`anasofia@...`): ver el mensaje sin leer, responder y, en **Mis Ventas**, marcar el pedido como entregado.
+3. Cerrar sesión (botón «Salir») e iniciar como el vendedor (`a21000001@...`): ver el mensaje sin leer, responder y, en **Mis Ventas**, marcar el pedido como entregado.
 4. Volver a entrar como comprador: en **Mi Perfil** calificar al vendedor.
 5. Subasta: pujar con dos cuentas distintas; al llegar la hora de cierre gana la puja más alta y se genera un pedido.
 6. En **Mis Ventas** probar **Editar** y **Eliminar** publicaciones.

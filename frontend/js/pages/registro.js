@@ -16,11 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const confirmarContrasena = document.getElementById('password-confirm').value;
 
       // Expresión Regular en JavaScript
-      const regexUady = /^[a-zA-Z0-9._%+-]+@(alumnos\.uady\.mx|correo\.uady\.mx)$/;
+      const regexUady = /^(a\d{8}@alumnos\.uady\.mx|[a-z0-9]+([._%+-][a-z0-9]+)*@correo\.uady\.mx)$/i;
       if (!regexUady.test(correo)) {
-        mensajeRespuesta.textContent = 'Acceso denegado: solo se permiten correos @alumnos.uady.mx o @correo.uady.mx';
+        mensajeRespuesta.textContent = 'Acceso denegado: usa tu matrícula (a + 8 dígitos @alumnos.uady.mx) o un correo @correo.uady.mx';
         mensajeRespuesta.style.color = '#dc3545';
-        return; 
+        return;
       }
 
       // Validación de seguridad de la contraseña

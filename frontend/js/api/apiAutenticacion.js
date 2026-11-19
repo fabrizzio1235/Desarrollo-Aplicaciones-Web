@@ -10,9 +10,9 @@ const ApiAutenticacion = {
   inicializarUsuariosDemo() {
     const usuarios = this._leer('jz_usuarios');
     const cuentasDemo = [
-      { nombre: 'Ana Sofía Martínez', correo: 'anasofia@alumnos.uady.mx', campus: 'exactas', facultad: 'Facultad de Ingeniería (FIUADY)' },
-      { nombre: 'Luis Fernando R.', correo: 'luis.r@alumnos.uady.mx', campus: 'exactas', facultad: 'Facultad de Matemáticas (FMAT)' },
-      { nombre: 'Valeria C.', correo: 'valeria.c@alumnos.uady.mx', campus: 'salud', facultad: 'Facultad de Química' }
+      { nombre: 'Ana Sofía Martínez', correo: 'a21000001@alumnos.uady.mx', campus: 'exactas', facultad: 'Facultad de Ingeniería (FIUADY)' },
+      { nombre: 'Luis Fernando R.', correo: 'a21000002@alumnos.uady.mx', campus: 'exactas', facultad: 'Facultad de Matemáticas (FMAT)' },
+      { nombre: 'Valeria C.', correo: 'a21000003@alumnos.uady.mx', campus: 'salud', facultad: 'Facultad de Química' }
     ];
     let huboCambios = false;
     cuentasDemo.forEach(cuenta => {
