@@ -10,6 +10,8 @@
 
   <script src="../js/api/apiAutenticacion.js" defer></script>
   <script src="../js/api/guardianRutas.js" defer></script>
+  <script src="../js/api/apiProductos.js" defer></script>
+  <script src="../js/api/apiMensajes.js" defer></script>
 </head>
 <body>
   <header class="main-header">
@@ -29,51 +31,25 @@
   </header>
 
   <main class="chat-layout">
-    <!-- Lista lateral de conversaciones -->
+    <!-- Lista lateral de conversaciones (se llena desde mensajes.js) -->
     <aside class="chat-sidebar" aria-label="Conversaciones activas">
       <header class="chat-sidebar-header">
         <h1>Mensajes</h1>
       </header>
-      <ul class="conversation-list" id="lista-conversaciones">
-        <li class="conversation-item active" data-chat-id="chat-101">
-          <button type="button">
-            <strong>Ana Sofía Martínez</strong>
-            <span class="chat-product-ref">Cálculo de una Variable - Stewart</span>
-            <small class="chat-preview">Nos vemos en la cafetería de FIUADY a las 11...</small>
-          </button>
-        </li>
-        <li class="conversation-item" data-chat-id="chat-102">
-          <button type="button">
-            <strong>Luis Fernando R.</strong>
-            <span class="chat-product-ref">Kit Arduino Uno R3</span>
-            <small class="chat-preview">¿Incluye el cable USB azul?</small>
-          </button>
-        </li>
-      </ul>
+      <ul class="conversation-list" id="lista-conversaciones"></ul>
+      <p class="chat-empty" id="sin-conversaciones" hidden>Aquí aparecerán tus conversaciones con compradores y vendedores.</p>
     </aside>
 
     <!-- Ventana activa de chat -->
-    <section class="chat-window" aria-label="Hilo de mensajes">
+    <section class="chat-window" id="ventana-chat" aria-label="Hilo de mensajes" hidden>
       <header class="chat-header">
         <div>
-          <h2 id="chat-interlocutor">Ana Sofía Martínez <small>(@alumnos.uady.mx)</small></h2>
-          <p class="chat-context">
-            Publicación: <a href="detalle-producto.html?id=101">Cálculo de una Variable - Stewart ($350.00)</a> ·
-            <span class="status-badge status-pendiente">Pendiente de entrega</span>
-          </p>
+          <h2 id="chat-interlocutor"></h2>
+          <p class="chat-context" id="chat-contexto"></p>
         </div>
       </header>
 
-      <div class="chat-messages" id="contenedor-mensajes" aria-live="polite">
-        <article class="message received">
-          <p>Hola, aún tengo disponible el libro. Entrego en Campus Exactas.</p>
-          <time datetime="2026-11-15T10:15">10:15 AM</time>
-        </article>
-        <article class="message sent">
-          <p>¡Excelente! Ya envié la solicitud de compra. ¿Te queda bien mañana en la cafetería de FIUADY a las 11:00 AM?</p>
-          <time datetime="2026-11-15T10:18">10:18 AM</time>
-        </article>
-      </div>
+      <div class="chat-messages" id="contenedor-mensajes" aria-live="polite"></div>
 
       <!-- Sugerencias rápidas de puntos de encuentro -->
       <div class="quick-replies" aria-label="Respuestas rápidas de ubicación">
@@ -82,14 +58,22 @@
         <button type="button" class="chip" data-text="Ya llegué al punto de encuentro.">Ya llegué al punto</button>
       </div>
 
+      <p id="chat-error" class="feedback-msg" role="alert" aria-live="polite"></p>
+
       <form class="chat-input-form" id="form-enviar-mensaje">
         <label for="input-mensaje" class="sr-only">Escribe un mensaje</label>
         <input type="text" id="input-mensaje" name="mensaje" placeholder="Acuerda el punto y hora exacta en el campus..." required autocomplete="off">
         <button type="submit" class="btn btn-primary">Enviar</button>
       </form>
     </section>
+
+    <!-- Estado vacío: sin conversación seleccionada -->
+    <section class="chat-window chat-placeholder" id="chat-vacio">
+      <p id="chat-vacio-texto"></p>
+      <a href="productos.html" class="btn btn-primary">Explorar publicaciones</a>
+    </section>
   </main>
 
-  <script src="../js/mensajes.js" defer></script>
+  <script src="../js/pages/mensajes.js" defer></script>
 </body>
 </html>

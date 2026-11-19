@@ -660,3 +660,20 @@ dialog form {
   gap: 8px;
   margin-top: 18px;
 }
+
+/* Botón "Salir" del menú principal (lo agrega navegacion.js) */
+.main-nav .nav-logout {
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #455568;
+  font: inherit;
+  font-size: .88rem;
+  cursor: pointer;
+}
+
+.main-nav .nav-logout:hover {
+  background: var(--azul-claro);
+  color: var(--azul-oscuro);
+}

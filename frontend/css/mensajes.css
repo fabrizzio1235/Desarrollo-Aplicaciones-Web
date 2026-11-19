@@ -230,3 +230,41 @@
     padding: 9px;
   }
 }
+
+/* Estados vacíos, no leídos y panel sin conversación */
+.chat-empty {
+  padding: 16px 18px;
+  color: #5b6b7c;
+  font-size: .86rem;
+  text-align: center;
+}
+
+.chat-placeholder {
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  color: #5b6b7c;
+  text-align: center;
+}
+
+.conversation-item button {
+  position: relative;
+}
+
+.unread-count {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+#chat-error:empty {
+  display: none;
+}
+
+#chat-error {
+  margin: 0;
+  padding: 6px 18px;
+  color: #dc3545;
+  font-size: .82rem;
+}

@@ -95,7 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelar.type = 'button';
         cancelar.dataset.action = 'cancelar';
         cancelar.addEventListener('click', () => cambiarEstado(pedido.idPedido, 'cancelado'));
-        acciones.append(completar, cancelar);
+        const chat = crear('a', 'btn btn-secondary btn-sm', 'Chat');
+        chat.href = `mensajes.html?pedido=${encodeURIComponent(pedido.idPedido)}`;
+        acciones.append(completar, cancelar, chat);
       } else {
         acciones.textContent = 'Transacción cerrada';
       }
