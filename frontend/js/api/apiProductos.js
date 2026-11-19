@@ -7,6 +7,15 @@ const NOMBRES_CAMPUS = {
   arquitectura: 'Campus de Arquitectura, Hábitat y Arte'
 };
 
+const NOMBRES_CATEGORIAS = {
+  libros: 'Libros',
+  laboratorio: 'Material de laboratorio',
+  electronica: 'Electrónica',
+  papeleria: 'Papelería',
+  uniformes: 'Uniformes',
+  otros: 'Otros'
+};
+
 const MENSAJE_SIN_ESPACIO = 'No hay espacio disponible en el navegador. Elimina publicaciones antiguas o usa menos fotografías.';
 
 const ApiProductos = {
@@ -154,6 +163,7 @@ const ApiProductos = {
   // Devuelve el arreglo completo de productos
   obtenerTodosLosProductos() {
     this.inicializarDefecto();
+    this.cerrarSubastasVencidas();
     return this._leerProductos();
   },
 
@@ -166,7 +176,8 @@ const ApiProductos = {
 
   // Motor centralizado de filtrado y ordenamiento del catálogo
   filtrarCatalogo(criterios) {
-    let productos = this.obtenerTodosLosProductos();
+    // Solo publicaciones activas (sin subastas cerradas ni productos agotados)
+    let productos = this.obtenerTodosLosProductos().filter(p => this.estaActiva(p));
 
     // 1. Filtrar por campus (si hay al menos uno seleccionado)
     if (criterios.campus && criterios.campus.length > 0) {
@@ -242,22 +253,13 @@ const ApiProductos = {
     const productos = this.obtenerTodosLosProductos();
     const usuario = ApiAutenticacion.obtenerUsuarioActual() || sesion;
 
-    const nombresCategorias = {
-      libros: 'Libros',
-      laboratorio: 'Material de laboratorio',
-      electronica: 'Electrónica',
-      papeleria: 'Papelería',
-      uniformes: 'Uniformes',
-      otros: 'Otros'
-    };
-
     const nuevoId = new Date().getTime();
 
     const nuevoProducto = {
       id: nuevoId,
       titulo: String(datosNuevo.titulo || '').trim(),
       categoria: datosNuevo.categoria,
-      categoriaNombre: nombresCategorias[datosNuevo.categoria] || 'Otros',
+      categoriaNombre: NOMBRES_CATEGORIAS[datosNuevo.categoria] || 'Otros',
       modalidad: datosNuevo.modalidad,
       precio: datosNuevo.precio,
       stock: Number(datosNuevo.stock),
@@ -284,7 +286,66 @@ const ApiProductos = {
     return { exito: true, producto: nuevoProducto };
   },
 
-  // Actualiza la oferta más alta en artículos de modalidad subasta exigiendo sesión activa
+  // ¿La subasta ya terminó? (por fecha de cierre o porque ya fue cerrada)
+  subastaCerrada(producto) {
+    if (!producto || producto.modalidad !== 'subasta') return false;
+    if (producto.estadoSubasta === 'cerrada') return true;
+    const cierre = new Date(producto.cierreSubasta).getTime();
+    return !Number.isNaN(cierre) && cierre <= Date.now();
+  },
+
+  // ¿La publicación debe aparecer en el catálogo?
+  estaActiva(producto) {
+    if (producto.estadoPublicacion === 'cerrada' || producto.estadoPublicacion === 'vendido') return false;
+    if (producto.modalidad === 'subasta') return !this.subastaCerrada(producto);
+    return Number(producto.stock) > 0;
+  },
+
+  // Cierra las subastas vencidas. Si hubo pujas, la más alta gana y se genera
+  // un pedido pendiente de entrega para el ganador. Devuelve cuántas cerró.
+  cerrarSubastasVencidas() {
+    const productos = this._leerProductos();
+    const vencidas = productos.filter(p =>
+      p.modalidad === 'subasta' && p.estadoSubasta !== 'cerrada' && this.subastaCerrada(p)
+    );
+    if (vencidas.length === 0) return 0;
+
+    const pedidos = JSON.parse(localStorage.getItem('jz_pedidos') || '[]');
+    vencidas.forEach((producto, indice) => {
+      producto.estadoSubasta = 'cerrada';
+      const pujas = Array.isArray(producto.pujas) ? producto.pujas : [];
+      if (pujas.length === 0) {
+        producto.estadoPublicacion = 'cerrada';
+        return;
+      }
+      const ganadora = pujas[pujas.length - 1];
+      producto.ganadorCorreo = ganadora.correo;
+      producto.ganadorNombre = ganadora.nombre;
+      producto.stock = 0;
+      producto.estadoPublicacion = 'vendido';
+      pedidos.push({
+        idPedido: Date.now() + indice,
+        idProducto: producto.id,
+        tituloProducto: producto.titulo,
+        cantidad: 1,
+        total: producto.precio,
+        puntoEntrega: (producto.puntosEntrega && producto.puntosEntrega[0]) || 'Por acordar',
+        horarioEntrega: (producto.horariosEntrega && producto.horariosEntrega[0]) || 'Por acordar',
+        compradorCorreo: ganadora.correo,
+        vendedorNombre: producto.vendedorNombre,
+        vendedorCorreo: producto.vendedorCorreo || '',
+        fechaCreacion: new Date().toISOString(),
+        estado: 'pendiente',
+        origen: 'subasta'
+      });
+    });
+
+    if (!this._guardarProductos(productos)) return 0;
+    localStorage.setItem('jz_pedidos', JSON.stringify(pedidos));
+    return vencidas.length;
+  },
+
+  // Registra una puja exigiendo sesión activa y respetando las reglas de la subasta
   registrarPuja(idProducto, nuevoMonto) {
     const sesion = ApiAutenticacion.obtenerSesion();
     if (!sesion) {
@@ -297,17 +358,128 @@ const ApiProductos = {
     if (!producto || producto.modalidad !== 'subasta') {
       return { exito: false, mensaje: 'Este artículo no admite pujas.' };
     }
+    if (this.subastaCerrada(producto)) {
+      return { exito: false, mensaje: 'La subasta de este artículo ya cerró.' };
+    }
 
+    const correo = String(sesion.correo || '').toLowerCase();
+    if (String(producto.vendedorCorreo || '').toLowerCase() === correo) {
+      return { exito: false, mensaje: 'No puedes pujar por tu propia publicación.' };
+    }
+
+    const pujas = Array.isArray(producto.pujas) ? producto.pujas : [];
+    if (pujas.length > 0 && pujas[pujas.length - 1].correo === correo) {
+      return { exito: false, mensaje: 'Ya tienes la puja más alta de esta subasta.' };
+    }
+
+    const monto = Number(nuevoMonto);
     const pujaMinima = producto.precio + 10;
-    if (nuevoMonto < pujaMinima) {
+    if (!Number.isFinite(monto) || monto < pujaMinima) {
       return { exito: false, mensaje: `La puja debe ser de al menos $${pujaMinima}.00 MXN.` };
     }
 
-    producto.precio = nuevoMonto;
+    pujas.push({ correo, nombre: sesion.nombre || correo, monto, fecha: Date.now() });
+    producto.pujas = pujas;
+    producto.precio = monto;
     if (!this._guardarProductos(productos)) {
       return { exito: false, mensaje: MENSAJE_SIN_ESPACIO };
     }
-    return { exito: true, nuevoPrecio: producto.precio };
+    return { exito: true, nuevoPrecio: producto.precio, totalPujas: pujas.length };
+  },
+
+  // ¿El usuario de la sesión es el dueño de la publicación?
+  _esVendedor(producto, sesion) {
+    return Boolean(sesion) &&
+      String(producto.vendedorCorreo || '').toLowerCase() === String(sesion.correo || '').toLowerCase();
+  },
+
+  // Edita una publicación propia. Los campos que no se pueden cambiar se ignoran.
+  actualizarProducto(idProducto, cambios) {
+    const sesion = ApiAutenticacion.obtenerSesion();
+    if (!sesion) return { exito: false, mensaje: 'Debes iniciar sesión para editar una publicación.' };
+
+    const productos = this.obtenerTodosLosProductos();
+    const producto = productos.find(p => p.id === Number(idProducto));
+    if (!producto) return { exito: false, mensaje: 'La publicación no existe.' };
+    if (!this._esVendedor(producto, sesion)) {
+      return { exito: false, mensaje: 'Solo el vendedor puede editar esta publicación.' };
+    }
+    if (this.subastaCerrada(producto)) {
+      return { exito: false, mensaje: 'No se puede editar una subasta cerrada.' };
+    }
+
+    const titulo = String(cambios.titulo || '').trim();
+    const descripcion = String(cambios.descripcion || '').trim();
+    const puntoFisico = String(cambios.puntoFisico || '').trim();
+    const horarios = String(cambios.horarios || '').trim();
+    if (!titulo || !descripcion) return { exito: false, mensaje: 'El título y la descripción son obligatorios.' };
+    if (!puntoFisico || !horarios) return { exito: false, mensaje: 'Indica los puntos de entrega y tus horarios.' };
+    if (!Array.isArray(cambios.campus) || cambios.campus.length === 0) {
+      return { exito: false, mensaje: 'Selecciona al menos un campus de entrega.' };
+    }
+
+    const esSubasta = producto.modalidad === 'subasta';
+    const tienePujas = Array.isArray(producto.pujas) && producto.pujas.length > 0;
+
+    if (!esSubasta || !tienePujas) {
+      const precio = Number(cambios.precio);
+      if (!Number.isFinite(precio) || precio <= 0) {
+        return { exito: false, mensaje: 'Ingresa un precio válido mayor a $0.00 MXN.' };
+      }
+      producto.precio = precio;
+    }
+    if (!esSubasta) {
+      const stock = Number(cambios.stock);
+      if (!Number.isInteger(stock) || stock < 1 || stock > 50) {
+        return { exito: false, mensaje: 'El stock debe ser un número entero entre 1 y 50 unidades.' };
+      }
+      producto.stock = stock;
+      producto.estadoPublicacion = 'activa';
+    }
+
+    producto.titulo = titulo;
+    producto.descripcion = descripcion;
+    producto.categoria = cambios.categoria;
+    producto.categoriaNombre = NOMBRES_CATEGORIAS[cambios.categoria] || 'Otros';
+    producto.campus = cambios.campus;
+    producto.entregaTexto = puntoFisico;
+    producto.puntosEntrega = puntoFisico.split(',').map(x => x.trim()).filter(Boolean);
+    producto.horariosEntrega = horarios.split(',').map(x => x.trim()).filter(Boolean);
+
+    // Si el vendedor eligió fotografías nuevas, reemplazan a las anteriores
+    if (Array.isArray(cambios.imagenes) && cambios.imagenes.length > 0) {
+      producto.imagenes = cambios.imagenes.slice(0, 4);
+      producto.imagen = producto.imagenes[0];
+    }
+
+    if (!this._guardarProductos(productos)) return { exito: false, mensaje: MENSAJE_SIN_ESPACIO };
+    return { exito: true, producto };
+  },
+
+  // Da de baja una publicación propia (no si hay pedidos pendientes o pujas en curso)
+  eliminarProducto(idProducto) {
+    const sesion = ApiAutenticacion.obtenerSesion();
+    if (!sesion) return { exito: false, mensaje: 'Debes iniciar sesión para eliminar una publicación.' };
+
+    const productos = this.obtenerTodosLosProductos();
+    const producto = productos.find(p => p.id === Number(idProducto));
+    if (!producto) return { exito: false, mensaje: 'La publicación no existe.' };
+    if (!this._esVendedor(producto, sesion)) {
+      return { exito: false, mensaje: 'Solo el vendedor puede eliminar esta publicación.' };
+    }
+
+    const pedidos = JSON.parse(localStorage.getItem('jz_pedidos') || '[]');
+    if (pedidos.some(p => Number(p.idProducto) === producto.id && p.estado === 'pendiente')) {
+      return { exito: false, mensaje: 'Tienes pedidos pendientes de esta publicación. Márcalos como entregados o cancélalos primero.' };
+    }
+    const tienePujas = Array.isArray(producto.pujas) && producto.pujas.length > 0;
+    if (producto.modalidad === 'subasta' && tienePujas && !this.subastaCerrada(producto)) {
+      return { exito: false, mensaje: 'La subasta tiene pujas activas y no puede eliminarse antes del cierre.' };
+    }
+
+    const restantes = productos.filter(p => p.id !== producto.id);
+    if (!this._guardarProductos(restantes)) return { exito: false, mensaje: MENSAJE_SIN_ESPACIO };
+    return { exito: true };
   },
 
   // Descuenta stock de un artículo de precio fijo y registra el pedido exigiendo sesión activa
@@ -392,7 +564,7 @@ const ApiProductos = {
       const producto = productos.find(p => Number(p.id) === Number(pedido.idProducto));
       if (producto) {
         producto.stock = Number(producto.stock || 0) + Number(pedido.cantidad || 0);
-        if (producto.stock > 0) producto.estadoPublicacion = 'activa';
+        if (producto.stock > 0) producto.estadoPublicacion = producto.modalidad === 'subasta' ? 'cerrada' : 'activa';
         this._guardarProductos(productos);
       }
     }

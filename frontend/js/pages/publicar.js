@@ -18,6 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mantiene una selección acumulada aunque el usuario abra el selector varias veces.
   let fotografiasSeleccionadas = [];
 
+  // Modo edición: publicar-producto.html?editar=ID reutiliza este mismo formulario
+  const idEdicion = new URLSearchParams(window.location.search).get('editar');
+  const productoEdicion = idEdicion ? ApiProductos.obtenerPorId(idEdicion) : null;
+  const modoEdicion = Boolean(productoEdicion);
+
+  if (idEdicion) {
+    const sesionActual = ApiAutenticacion.obtenerSesion();
+    const puedeEditar = productoEdicion
+      && sesionActual
+      && String(productoEdicion.vendedorCorreo || '').toLowerCase() === String(sesionActual.correo || '').toLowerCase()
+      && !ApiProductos.subastaCerrada(productoEdicion);
+    if (!puedeEditar) {
+      window.alert('No puedes editar esta publicación.');
+      window.location.replace('mis-publicaciones.html');
+      return;
+    }
+  }
+
   // Ajusta visibilidad del cierre de subasta y bloquea el stock en 1 cuando es subasta
   function actualizarInterfazModalidad(modalidadSeleccionada) {
     if (modalidadSeleccionada === 'subasta') {
@@ -183,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'Ingresa una descripción detallada del estado del artículo.';
     }
 
-    if (datos.cantidadFotos < 1 || datos.cantidadFotos > 4) {
+    if (!modoEdicion && (datos.cantidadFotos < 1 || datos.cantidadFotos > 4)) {
       return 'Selecciona entre 1 y 4 fotografías para el artículo.';
     }
 
@@ -191,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'Ingresa un precio válido mayor a $0.00 MXN.';
     }
 
-    if (datos.modalidad === 'subasta') {
+    if (datos.modalidad === 'subasta' && !modoEdicion) {
       if (!datos.cierreSubasta || datos.cierreSubasta === '') {
         return 'Indica la fecha y hora límite para el cierre de la subasta.';
       }
@@ -215,10 +233,46 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
+  // Rellena el formulario con los datos de la publicación que se está editando
+  function precargarFormularioEdicion() {
+    const producto = productoEdicion;
+    const tienePujas = Array.isArray(producto.pujas) && producto.pujas.length > 0;
+
+    document.title = 'Editar publicación | JaguarZon UADY';
+    document.getElementById('publicar-titulo').textContent = 'Editar publicación';
+    formularioPublicar.querySelector('button[type="submit"]').textContent = 'Guardar cambios';
+    const ayudaFotos = formularioPublicar.querySelector('.form-help');
+    if (ayudaFotos) ayudaFotos.textContent = 'Si no seleccionas fotografías nuevas se conservan las actuales.';
+
+    // La modalidad no se puede cambiar una vez publicada
+    formularioPublicar.querySelectorAll('input[name="modalidad"]').forEach(radio => {
+      radio.checked = radio.value === producto.modalidad;
+      radio.disabled = true;
+    });
+    actualizarInterfazModalidad(producto.modalidad);
+
+    inputTitulo.value = producto.titulo;
+    selectCategoria.value = producto.categoria;
+    inputStock.value = producto.stock;
+    inputDescripcion.value = producto.descripcion;
+    inputPrecio.value = producto.precio;
+    if (producto.modalidad === 'subasta') {
+      inputCierreSubasta.value = producto.cierreSubasta || '';
+      inputCierreSubasta.disabled = true;
+      if (tienePujas) inputPrecio.disabled = true; // con pujas el precio ya no se toca
+    }
+    formularioPublicar.querySelectorAll('input[name="campus_entrega"]').forEach(casilla => {
+      casilla.checked = producto.campus.includes(casilla.value);
+    });
+    inputPuntoFisico.value = (producto.puntosEntrega || []).join(', ') || producto.entregaTexto || '';
+    inputHorarios.value = (producto.horariosEntrega || []).join(', ');
+  }
+
   if (formularioPublicar) {
     // Sincroniza el estado inicial de la vista por si el navegador conserva una selección previa
     const radioInicial = formularioPublicar.querySelector('input[name="modalidad"]:checked');
     actualizarInterfazModalidad(radioInicial ? radioInicial.value : 'fijo');
+    if (modoEdicion) precargarFormularioEdicion();
 
     const radiosModalidad = formularioPublicar.querySelectorAll('input[name="modalidad"]');
     radiosModalidad.forEach(radio => {
@@ -249,10 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const respuesta = ApiProductos.crearProducto(datosNuevoProducto);
+      const respuesta = modoEdicion
+        ? ApiProductos.actualizarProducto(productoEdicion.id, datosNuevoProducto)
+        : ApiProductos.crearProducto(datosNuevoProducto);
 
       if (respuesta.exito) {
-        window.location.href = 'productos.html';
+        window.location.href = modoEdicion ? 'mis-publicaciones.html' : 'productos.html';
       } else {
         mostrarMensajeError(respuesta.mensaje);
       }

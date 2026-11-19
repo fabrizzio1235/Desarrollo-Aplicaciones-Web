@@ -12,6 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const date = new Date(valor);
     return Number.isNaN(date.getTime()) ? 'Sin fecha' : date.toLocaleDateString('es-MX');
   };
+  const fechaHora = valor => {
+    const date = new Date(valor);
+    return Number.isNaN(date.getTime()) ? 'sin fecha' : date.toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+  };
   const crear = (tag, clase, texto) => {
     const nodo = document.createElement(tag);
     if (clase) nodo.className = clase;
@@ -43,9 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const enlace = crear('a', '', producto.titulo);
       enlace.href = `detalle-producto.html?id=${encodeURIComponent(producto.id)}`;
       titulo.appendChild(enlace);
-      const modalidad = producto.modalidad === 'subasta' ? 'Subasta' : 'Precio fijo';
+      const cerrada = ApiProductos.subastaCerrada(producto);
+      const detalleModalidad = producto.modalidad === 'subasta'
+        ? `Subasta (${moneda(producto.precio)}) · ${cerrada ? 'Cerrada' : `Cierra ${fechaHora(producto.cierreSubasta)}`} · ${(producto.pujas || []).length} pujas`
+        : `Precio fijo (${moneda(producto.precio)}) · Stock restante: ${Number(producto.stock || 0)}`;
       info.append(titulo,
-        crear('p', '', `Modalidad: ${modalidad} (${moneda(producto.precio)}) · Stock restante: ${Number(producto.stock || 0)}`),
+        crear('p', '', `Modalidad: ${detalleModalidad}`),
         crear('p', '', `Entrega en: ${producto.entregaTexto || (producto.campus || []).join(', ') || 'Por definir'}`),
         crear('p', '', `Publicado: ${fecha(producto.fechaCreacion)}`));
 
@@ -53,9 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
       const ver = crear('a', 'btn btn-secondary btn-sm', 'Ver detalle');
       ver.href = enlace.href;
       acciones.appendChild(ver);
+
+      if (!cerrada) {
+        const editar = crear('a', 'btn btn-outline btn-sm', 'Editar');
+        editar.href = `publicar-producto.html?editar=${encodeURIComponent(producto.id)}`;
+        acciones.appendChild(editar);
+      }
+
+      const eliminar = crear('button', 'btn btn-danger btn-sm', 'Eliminar');
+      eliminar.type = 'button';
+      eliminar.addEventListener('click', () => eliminarPublicacion(producto));
+      acciones.appendChild(eliminar);
       articulo.append(imagen, info, acciones);
       lista.appendChild(articulo);
     });
+  }
+
+  function eliminarPublicacion(producto) {
+    if (!window.confirm(`¿Eliminar la publicación "${producto.titulo}"? Esta acción no se puede deshacer.`)) return;
+    const resultado = ApiProductos.eliminarProducto(producto.id);
+    if (!resultado.exito) {
+      window.alert(resultado.mensaje);
+      return;
+    }
+    mostrarPublicaciones();
   }
 
   function mostrarPedidos() {

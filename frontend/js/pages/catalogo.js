@@ -119,7 +119,13 @@ document.addEventListener('DOMContentLoaded', () => {
       parrafoCierre.className = 'auction-timer';
       parrafoCierre.textContent = 'Cierra: ';
       const etiquetaTime = document.createElement('time');
-      etiquetaTime.textContent = producto.cierreSubasta || 'Próximamente';
+      const fechaCierre = new Date(producto.cierreSubasta);
+      if (Number.isNaN(fechaCierre.getTime())) {
+        etiquetaTime.textContent = 'Próximamente';
+      } else {
+        etiquetaTime.dateTime = fechaCierre.toISOString();
+        etiquetaTime.textContent = fechaCierre.toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+      }
       parrafoCierre.appendChild(etiquetaTime);
 
       cuerpo.append(spanCategoria, tituloH2, parrafoPrecio, parrafoCierre, parrafoEntrega, pieVendedor);

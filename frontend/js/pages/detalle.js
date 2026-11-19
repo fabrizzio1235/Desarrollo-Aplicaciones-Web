@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (bloqueSubasta) bloqueSubasta.hidden = !esSubasta;
   const cantidad = $('#cantidad-compra');
   if (cantidad) { cantidad.max = String(Math.max(1, Number(producto.stock || 0))); cantidad.value = '1'; cantidad.disabled = Number(producto.stock || 0) < 1; }
-  if (Number(producto.stock || 0) < 1 && formulario) formulario.hidden = true;
+  if (Number(producto.stock || 0) < 1 && formulario && !esSubasta) formulario.hidden = true;
 
   const sesion = ApiAutenticacion.obtenerSesion();
   const esVendedor = sesion && String(sesion.correo || '').toLowerCase() === correoVendedor;
@@ -150,20 +150,99 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modal?.showModal) modal.showModal(); else window.alert('Tu solicitud quedó registrada como pendiente de entrega.');
   });
 
+  // ---- Subasta: pujas, cuenta regresiva y cierre automático
   const botonPujar = $('#btn-pujar');
-  if (botonPujar) {
-    const inputPuja = $('#monto-puja'); const textoPuja = $('#texto-puja');
-    const minimo = Number(producto.precio || 0) + 10;
-    if (inputPuja) { inputPuja.min = String(minimo); inputPuja.placeholder = `Oferta mínima: ${moneda(minimo)}`; }
-    if (textoPuja) textoPuja.textContent = `Puja mínima siguiente: ${moneda(minimo)} · Cierre: ${producto.cierreSubasta || 'según lo acordado'}`;
+  if (esSubasta && botonPujar) {
+    const inputPuja = $('#monto-puja');
+    const textoPuja = $('#texto-puja');
+    const cuentaRegresiva = $('#cuenta-regresiva');
+    const infoPujas = $('#info-pujas');
+    let temporizador = null;
+    let fechaCierre = new Date(producto.cierreSubasta);
+
+    const dosDigitos = numero => String(numero).padStart(2, '0');
+
+    function formatoTiempoRestante(milisegundos) {
+      const totalSegundos = Math.max(0, Math.floor(milisegundos / 1000));
+      const dias = Math.floor(totalSegundos / 86400);
+      const horas = Math.floor((totalSegundos % 86400) / 3600);
+      const minutos = Math.floor((totalSegundos % 3600) / 60);
+      const segundos = totalSegundos % 60;
+      const prefijoDias = dias > 0 ? `${dias} d ` : '';
+      return `${prefijoDias}${dosDigitos(horas)}:${dosDigitos(minutos)}:${dosDigitos(segundos)}`;
+    }
+
+    // Se ejecuta cada segundo: solo actualiza el reloj (no relee el almacenamiento)
+    function actualizarReloj() {
+      const restante = fechaCierre.getTime() - Date.now();
+      if (restante <= 0) {
+        pintarSubasta(); // la API cierra la subasta y define al ganador
+        return;
+      }
+      cuentaRegresiva.textContent = `Cierra en ${formatoTiempoRestante(restante)}`;
+    }
+
+    // Lee el estado actual de la subasta y lo muestra. Devuelve true si ya cerró.
+    function pintarSubasta() {
+      const actual = ApiProductos.obtenerPorId(producto.id) || producto;
+      const pujas = Array.isArray(actual.pujas) ? actual.pujas : [];
+      const cerrada = ApiProductos.subastaCerrada(actual);
+      fechaCierre = new Date(actual.cierreSubasta);
+
+      if (pujas.length) {
+        const lider = pujas[pujas.length - 1];
+        infoPujas.textContent = `${pujas.length} ${pujas.length === 1 ? 'puja' : 'pujas'} · Puja más alta de ${lider.nombre}`;
+      } else {
+        infoPujas.textContent = 'Aún no hay pujas. ¡Sé el primero en ofertar!';
+      }
+
+      if (cerrada) {
+        clearInterval(temporizador);
+        texto('#detalle-precio', `${pujas.length ? 'Puja ganadora' : 'Precio inicial'}: ${moneda(actual.precio)}`);
+        texto('#detalle-stock', 'Subasta cerrada');
+        cuentaRegresiva.textContent = 'Subasta cerrada';
+        inputPuja.disabled = true;
+        botonPujar.disabled = true;
+        const gane = sesion && actual.ganadorCorreo === String(sesion.correo || '').toLowerCase();
+        if (gane) {
+          textoPuja.textContent = '¡Ganaste esta subasta! Revisa tu pedido en Mi Perfil y coordina la entrega en el chat.';
+        } else if (actual.ganadorNombre) {
+          textoPuja.textContent = `Ganador: ${actual.ganadorNombre} con ${moneda(actual.precio)}.`;
+        } else {
+          textoPuja.textContent = 'La subasta cerró sin pujas.';
+        }
+        return true;
+      }
+
+      const minimo = Number(actual.precio || 0) + 10;
+      texto('#detalle-precio', `Puja actual: ${moneda(actual.precio)}`);
+      texto('#detalle-stock', 'Subasta en curso');
+      inputPuja.min = String(minimo);
+      inputPuja.placeholder = `Oferta mínima: ${moneda(minimo)}`;
+      textoPuja.textContent = `Puja mínima siguiente: ${moneda(minimo)} · Cierre: ${fechaCierre.toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })}`;
+      actualizarReloj();
+      return false;
+    }
+
     botonPujar.addEventListener('click', () => {
-      const resultado = ApiProductos.registrarPuja(producto.id, Number(inputPuja?.value));
-      if (!resultado.exito) { window.alert(resultado.mensaje); return; }
-      texto('#detalle-precio', `Puja actual: ${moneda(resultado.nuevoPrecio)}`);
-      if (inputPuja) { inputPuja.value = ''; inputPuja.min = String(resultado.nuevoPrecio + 10); }
-      if (textoPuja) textoPuja.textContent = `Puja mínima siguiente: ${moneda(resultado.nuevoPrecio + 10)} · Cierre: ${producto.cierreSubasta || 'según lo acordado'}`;
+      const resultado = ApiProductos.registrarPuja(producto.id, Number(inputPuja.value));
+      if (!resultado.exito) {
+        window.alert(resultado.mensaje);
+        pintarSubasta();
+        return;
+      }
+      inputPuja.value = '';
+      pintarSubasta();
       window.alert('Tu puja se registró correctamente.');
     });
+
+    // Enter dentro del campo de puja no debe recargar la página
+    formulario.addEventListener('submit', evento => {
+      evento.preventDefault();
+      botonPujar.click();
+    });
+
+    if (!pintarSubasta()) temporizador = setInterval(actualizarReloj, 1000);
   }
 
   const cerrarModal = $('#btn-cerrar-modal'); if (cerrarModal && modal) cerrarModal.addEventListener('click', () => modal.close());

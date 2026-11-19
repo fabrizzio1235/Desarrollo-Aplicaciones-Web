@@ -333,3 +333,12 @@
     margin-left: 0;
   }
 }
+
+/* Cuenta regresiva de la subasta (la actualiza detalle.js cada segundo) */
+.auction-countdown {
+  margin: 0 0 6px;
+  color: #b3261e;
+  font-size: 1.05rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
