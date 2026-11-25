@@ -1,0 +1,13 @@
+config/local.php
+logs/*
+!logs/.gitkeep
+!logs/.htaccess
+uploads/*
+!uploads/.gitkeep
+!uploads/.htaccess
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+node_modules/
+*.zip

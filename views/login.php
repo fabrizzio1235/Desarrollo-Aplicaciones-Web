@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión | JaguarZon UADY</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/componentes.css">
+  <link rel="stylesheet" href="../assets/css/login.css">
+  
+  <script src="../assets/js/api/apiAutenticacion.js" defer></script>
+  <script src="../assets/js/pages/login.js" defer></script>
+</head>
+<body class="auth-page">
+  <header class="auth-header">
+    <span class="brand-logo"><strong>JaguarZon</strong> <span>UADY</span></span>
+  </header>
+
+  <main class="auth-container">
+    <section class="auth-card" aria-labelledby="login-titulo">
+      <h1 id="login-titulo">Iniciar sesión</h1>
+      <p class="auth-subtitle">Comercio estudiantil seguro dentro de los campus UADY.</p>
+
+      <form id="form-login" action="productos.php" method="POST" novalidate>
+        <div class="form-group">
+          <label for="login-correo">Correo institucional</label>
+          <input
+            type="email"
+            id="login-correo"
+            name="correo"
+            placeholder="usuario@alumnos.uady.mx"
+            pattern="^[a-zA-Z0-9._%+-]+@(alumnos\.uady\.mx|correo\.uady\.mx)$"
+            title="Ingresa tu correo institucional UADY"
+            required
+            autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" name="password" required autocomplete="current-password">
+        </div>
+
+        <div class="form-options">
+          <label class="form-check">
+            <input type="checkbox" name="mantener_sesion" id="login-recordar">
+            <span>Mantener sesión activa</span>
+          </label>
+        </div>
+
+        <p id="login-feedback" class="feedback-msg" role="alert" aria-live="polite"></p>
+
+        <button type="submit" class="btn btn-primary btn-block">Entrar al mercado</button>
+      </form>
+
+      <footer class="auth-footer">
+        <p>¿Aún no tienes cuenta? <a href="registro.php">Regístrate con tu correo institucional</a></p>
+      </footer>
+    </section>
+  </main>
+
+</body>
+</html>
