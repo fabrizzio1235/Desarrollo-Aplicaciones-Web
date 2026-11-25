@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="assets/css/componentes.css">
   <link rel="stylesheet" href="assets/css/inicio.css">
 
-  <script src="assets/js/api/apiAutenticacion.js" defer></script>
 </head>
 <body class="landing-page">
   <!-- Cabecera de portada -->
