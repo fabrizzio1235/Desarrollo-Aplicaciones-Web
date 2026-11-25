@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro Institucional | JaguarZon UADY</title>
+    <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/componentes.css">
+  <link rel="stylesheet" href="../assets/css/registro.css">
+
+  <script src="../assets/js/api/apiAutenticacion.js" defer></script>
+<script src="../assets/js/pages/registro.js" defer></script>
+</head>
+<body class="auth-page">
+  <header class="auth-header">
+    <a href="login.php" class="brand-logo" aria-label="Inicio JaguarZon">
+      <strong>JaguarZon</strong> <span>UADY</span>
+    </a>
+  </header>
+
+  <main class="auth-container">
+    <section class="auth-card" aria-labelledby="registro-titulo">
+      <h1 id="registro-titulo">Crear cuenta universitaria</h1>
+      <p class="auth-subtitle">Acceso exclusivo para estudiantes y personal activo de la UADY.</p>
+
+      <form id="form-registro" action="login.php" method="POST" novalidate>
+        <div class="form-group">
+          <label for="nombre-completo">Nombre completo</label>
+          <input type="text" id="nombre-completo" name="nombre" placeholder="Ej. Carlos Eduardo Chan Pech" required autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label for="correo-uady">Correo institucional UADY</label>
+          <input
+            type="email"
+            id="correo-uady"
+            name="correo"
+            placeholder="a20214589@alumnos.uady.mx"
+            title="Debes ingresar un correo institucional válido (@alumnos.uady.mx o @correo.uady.mx)"
+            required
+            autocomplete="email">
+          <small class="form-hint">Solo se admiten dominios <code>@alumnos.uady.mx</code> o <code>@correo.uady.mx</code>.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="campus-origen">Campus o dependencia principal</label>
+          <select id="campus-origen" name="campus" required>
+            <option value="" disabled selected>Selecciona tu campus</option>
+            <option value="exactas">Campus de Ciencias Exactas e Ingenierías</option>
+            <option value="salud">Campus de Ciencias de la Salud</option>
+            <option value="sociales">Campus de Ciencias Sociales, Económico-Administrativas y Humanidades</option>
+            <option value="biologicas">Campus de Ciencias Biológicas y Agropecuarias</option>
+            <option value="arquitectura">Campus de Arquitectura, Hábitat, Arte y Diseño</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" minlength="8" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+        </div>
+
+        <div class="form-group">
+          <label for="password-confirm">Confirmar contraseña</label>
+          <input type="password" id="password-confirm" name="password_confirm" minlength="8" placeholder="Repite tu contraseña" required autocomplete="new-password">
+        </div>
+
+        <div class="form-check">
+          <input type="checkbox" id="terminos-campus" name="terminos" required>
+          <label for="terminos-campus">Acepto realizar entregas únicamente dentro de instalaciones universitarias UADY.</label>
+        </div>
+
+        <p id="registro-feedback" class="feedback-msg" role="alert" aria-live="polite"></p>
+
+        <button type="submit" class="btn btn-primary btn-block">Registrarme con correo UADY</button>
+      </form>
+
+      <footer class="auth-footer">
+        <p>¿Ya tienes cuenta verificada? <a href="login.php">Inicia sesión aquí</a></p>
+      </footer>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JaguarZon: Plataforma de comercio estudiantil exclusiva para la comunidad de la Universidad Autónoma de Yucatán (UADY).">
+  <title>JaguarZon | Comercio Estudiantil Exclusivo UADY</title>
+    <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/componentes.css">
+  <link rel="stylesheet" href="assets/css/inicio.css">
+
+  <script src="assets/js/api/apiAutenticacion.js" defer></script>
+</head>
+<body class="landing-page">
+  <!-- Cabecera de portada -->
+  <header class="landing-header">
+    <div class="header-container">
+      <a href="index.php" class="brand-logo" aria-label="Inicio JaguarZon UADY">
+        <strong>JaguarZon</strong> <span>UADY</span>
+      </a>
+
+      <nav class="landing-nav" aria-label="Secciones informativas">
+        <ul>
+          <li><a href="#como-funciona">¿Cómo funciona?</a></li>
+          <li><a href="#campus">Campus UADY</a></li>
+          <li><a href="#categorias">Categorías</a></li>
+        </ul>
+      </nav>
+
+      <div class="auth-nav-actions">
+        <a href="views/login.php" class="btn btn-secondary btn-sm">Iniciar sesión</a>
+        <a href="views/registro.php" class="btn btn-primary btn-sm">Crear cuenta</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. Hero Section: Propuesta de valor y restricción institucional -->
+    <section class="hero-section" aria-labelledby="hero-titulo">
+      <div class="hero-content">
+        <span class="verified-badge">Exclusivo comunidad @alumnos.uady.mx</span>
+        <h1 id="hero-titulo">Compra, vende y subasta material académico dentro de tu campus</h1>
+        <p class="hero-subtitle">
+          Conecta de forma segura con estudiantes y personal de la Universidad Autónoma de Yucatán.
+          Sin envíos externos ni estafas: acuerda el punto de encuentro en tu facultad y paga a contraentrega.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="views/registro.php" class="btn btn-primary btn-lg">Registrarme con correo UADY</a>
+          <a href="views/login.php" class="btn btn-outline btn-lg">Ya tengo cuenta</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Flujo operativo del sistema (3 pasos) -->
+    <section id="como-funciona" class="landing-section" aria-labelledby="pasos-titulo">
+      <div class="section-container">
+        <header class="section-header">
+          <h2 id="pasos-titulo">¿Cómo funciona JaguarZon?</h2>
+          <p>Diseñado para adaptarse a tus horarios entre clases y traslados universitarios.</p>
+        </header>
+
+        <ol class="steps-grid">
+          <li class="step-card">
+            <span class="step-number">1</span>
+            <h3>Verifica tu identidad UADY</h3>
+            <p>Regístrate únicamente con tu correo institucional activo (<code>@alumnos.uady.mx</code> o <code>@correo.uady.mx</code>) para mantener una comunidad confiable.</p>
+          </li>
+
+          <li class="step-card">
+            <span class="step-number">2</span>
+            <h3>Publica o encuentra lo que necesitas</h3>
+            <p>Filtra libros, batas, componentes electrónicos o uniformes según el campus de entrega, en modalidad de precio fijo o subasta.</p>
+          </li>
+
+          <li class="step-card">
+            <span class="step-number">3</span>
+            <h3>Entrega segura en tu facultad</h3>
+            <p>Coordina por chat interno el punto físico (cafetería, biblioteca o explanada), revisa tu artículo en persona y liquida a contraentrega.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 3. Cobertura por dependencias académicas UADY -->
+    <section id="campus" class="landing-section bg-alt" aria-labelledby="campus-titulo">
+      <div class="section-container">
+        <header class="section-header">
+          <h2 id="campus-titulo">Cobertura en toda la red universitaria</h2>
+          <p>Cada vendedor indica explícitamente a qué campus o facultades puede desplazarse para entregar.</p>
+        </header>
+
+        <ul class="campus-grid">
+          <li class="campus-card">
+            <h3>Ciencias Exactas e Ingenierías</h3>
+            <p>FIUADY, FMAT y Facultad de Ingeniería Química.</p>
+          </li>
+          <li class="campus-card">
+            <h3>Ciencias de la Salud</h3>
+            <p>Medicina, Enfermería, Odontología, Química y Rehabilitación.</p>
+          </li>
+          <li class="campus-card">
+            <h3>Ciencias Sociales y Humanidades</h3>
+            <p>Derecho, Contaduría y Administración, Economía, Psicología y Educación.</p>
+          </li>
+          <li class="campus-card">
+            <h3>Ciencias Biológicas y Agropecuarias</h3>
+            <p>Medicina Veterinaria y Zootecnia, Biología y Agroecología.</p>
+          </li>
+          <li class="campus-card">
+            <h3>Arquitectura, Hábitat y Arte</h3>
+            <p>Arquitectura, Diseño del Hábitat y Artes Visuales.</p>
+          </li>
+          <li class="campus-card">
+            <h3>Escuelas Preparatorias</h3>
+            <p>Preparatoria Uno, Preparatoria Dos y Unidad Académica Bachillerato con Interacción Comunitaria.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4. Vista previa de categorías (redirige a login para proteger el catálogo) -->
+    <section id="categorias" class="landing-section" aria-labelledby="categorias-titulo">
+      <div class="section-container">
+        <header class="section-header">
+          <h2 id="categorias-titulo">Categorías académicas disponibles</h2>
+          <p>Inicia sesión con tu cuenta institucional para explorar el inventario activo.</p>
+        </header>
+
+        <div class="category-pills">
+          <a href="views/login.php" class="category-pill">Libros y apuntes</a>
+          <a href="views/login.php" class="category-pill">Material de laboratorio</a>
+          <a href="views/login.php" class="category-pill">Electrónica y circuitos</a>
+          <a href="views/login.php" class="category-pill">Papelería y dibujo técnico</a>
+          <a href="views/login.php" class="category-pill">Uniformes y batas</a>
+          <a href="views/login.php" class="category-pill">Otros artículos</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Llamado a la acción final -->
+    <section class="cta-banner" aria-labelledby="cta-final-titulo">
+      <div class="section-container">
+        <h2 id="cta-final-titulo">¿Listo para darle segunda vida a tu material universitario?</h2>
+        <p>Únete a tus compañeros de facultad y comienza a comprar o vender de forma segura.</p>
+        <a href="views/registro.php" class="btn btn-primary btn-lg">Acceder a JaguarZon</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="main-footer">
+    <p>JaguarZon &copy; 2026 — Plataforma Universitaria de Comercio Estudiantil (UADY). Todas las transacciones se realizan dentro de instalaciones universitarias.</p>
+  </footer>
+
+</body>
+</html>
