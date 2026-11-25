@@ -1,11 +1,8 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Conexión PDO centralizada: único lugar donde viven las credenciales.
- * Para cambiar valores en TU máquina copia config/local.example.php a
- * config/local.php (ese archivo está en .gitignore y no se sube a Git).
- */
+//Conexión PDO centralizada: único lugar donde viven las credenciales.
+
 final class Database
 {
     private static ?PDO $conexion = null;
