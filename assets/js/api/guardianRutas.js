@@ -1,9 +1,8 @@
-// js repetido en todos los html's para proteger su acceso y obligarlo a pasar por un inicio de sesión
-//Al momento de entrar a una página se activa esta función, y redirige si no hay sesión
-function protegerRuta() {
-  const sesion = ApiAutenticacion.obtenerSesion();
-  
-  if (!sesion) {
+// Respaldo visual del lado cliente.
+// La protección real la hace el servidor con config/guard_vista.php y Sesion::requerir().
+async function protegerRuta() {
+  const respuesta = await window.jzAuth.cargarSesion();
+  if (respuesta.ok && !respuesta.datos.autenticado) {
     window.location.replace('login.php');
   }
 }
