@@ -177,9 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPedidos();
   }));
 
-  $('btn-cerrar-sesion').addEventListener('click', () => {
+  $('btn-cerrar-sesion').addEventListener('click', async () => {
     if (!window.confirm('¿Estás seguro de que deseas cerrar sesión?')) return;
-    ApiAutenticacion.cerrarSesion(); window.location.replace('login.php');
+    await window.jzAuth.cerrarSesion();
+    ApiAutenticacion.cerrarSesion();
+    window.location.replace('login.php');
   });
 
   renderPerfil();
