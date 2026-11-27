@@ -606,9 +606,6 @@ const ApiProductos = {
     const id = Number(idProducto);
     if (!sesion || !sesion.correo || !Number.isFinite(id)) return false;
 
-    const productoExiste = this.obtenerTodosLosProductos().some(p => Number(p.id) === id);
-    if (!productoExiste) return false;
-
     const clave = this._claveFavoritos(sesion.correo);
     const ids = this.obtenerIdsFavoritos();
     const agregado = !ids.includes(id);
