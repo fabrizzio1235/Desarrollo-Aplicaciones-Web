@@ -1,178 +1,306 @@
-// Mensajería interna simulada con localStorage.
-// Cada conversación pertenece a UNA publicación y a UN comprador, de modo que
-// los acuerdos de entrega quedan ligados al artículo (trazabilidad).
-// En la siguiente entrega esta capa se reemplazará por el backend.
+
+'use strict';
+
+/**
+ * Servicio de mensajería conectado al backend PHP.
+ * MariaDB es la fuente principal de conversaciones y mensajes.
+ */
 const ApiMensajes = {
-  CLAVE: 'jz_mensajes',
   MAX_CARACTERES: 500,
 
-  _leer() {
-    try {
-      const datos = JSON.parse(localStorage.getItem(this.CLAVE));
-      return Array.isArray(datos) ? datos : [];
-    } catch {
-      return [];
+  conversaciones: [],
+  mensajesCargados: new Set(),
+
+  /**
+   * Garantiza que exista una sesión y que ApiClient tenga el token CSRF.
+   */
+  async _asegurarSesion() {
+    if (!window.jzApi || !window.jzAuth) {
+      throw new Error('El servicio de autenticación no está disponible.');
+    }
+
+    if (!window.jzApi.tokenCsrf) {
+      const sesion = await window.jzAuth.cargarSesion();
+
+      if (!sesion.ok || !sesion.datos.autenticado) {
+        throw new Error(sesion.mensaje || 'Debes iniciar sesión.');
+      }
     }
   },
 
-  _guardar(conversaciones) {
+  /**
+   * Convierte fechas SQL de MariaDB a milisegundos.
+   */
+  _fechaAMilisegundos(fecha) {
+    if (!fecha) return Date.now();
+
+    const valor = String(fecha).replace(' ', 'T');
+    const resultado = new Date(valor).getTime();
+
+    return Number.isNaN(resultado) ? Date.now() : resultado;
+  },
+
+  /**
+   * Normaliza un mensaje recibido del servidor.
+   */
+  _normalizarMensaje(mensaje) {
+    return {
+      id: Number(mensaje.id),
+      idConversacion: Number(mensaje.idConversacion),
+      emisorId: Number(mensaje.emisorId),
+      de: String(mensaje.de || '').toLowerCase(),
+      emisorNombre: mensaje.emisorNombre || '',
+      texto: mensaje.texto || '',
+      fecha: this._fechaAMilisegundos(mensaje.fecha),
+      leido: Number(mensaje.leido) === 1
+    };
+  },
+
+  /**
+   * Normaliza el resumen de una conversación.
+   */
+  _normalizarConversacion(datos) {
+    const ultimoMensaje = datos.ultimoMensaje
+      ? {
+          de: '',
+          texto: datos.ultimoMensaje,
+          fecha: this._fechaAMilisegundos(datos.fechaUltimoMensaje)
+        }
+      : null;
+
+    return {
+      id: String(datos.idConversacion),
+      idConversacion: Number(datos.idConversacion),
+      idProducto: Number(datos.idProducto),
+      tituloProducto: datos.tituloProducto || '',
+      compradorId: Number(datos.compradorId),
+      compradorCorreo: String(datos.compradorCorreo || '').toLowerCase(),
+      compradorNombre: datos.compradorNombre || '',
+      vendedorId: Number(datos.vendedorId),
+      vendedorCorreo: String(datos.vendedorCorreo || '').toLowerCase(),
+      vendedorNombre: datos.vendedorNombre || '',
+      mensajes: ultimoMensaje ? [ultimoMensaje] : [],
+      noLeidos: Number(datos.noLeidos || 0),
+      fechaCreacion: ultimoMensaje ? ultimoMensaje.fecha : Date.now()
+    };
+  },
+
+  /**
+   * Realiza una petición y convierte los errores del servidor en excepciones.
+   */
+  async _solicitar(peticion) {
+    await this._asegurarSesion();
+
+    const respuesta = await peticion();
+
+    if (!respuesta.ok) {
+      throw new Error(respuesta.mensaje || 'No fue posible completar la operación.');
+    }
+
+    return respuesta.datos;
+  },
+
+  /**
+   * Obtiene las conversaciones del usuario autenticado.
+   */
+  async obtenerConversacionesUsuario() {
+  const datos = await this._solicitar(
+    () => window.jzApi.get('mensajes/conversaciones.php')
+  );
+
+  const conversacionesAnteriores = this.conversaciones;
+
+  this.conversaciones = (datos.conversaciones || []).map(datosConversacion => {
+    const conversacion = this._normalizarConversacion(datosConversacion);
+
+    const anterior = conversacionesAnteriores.find(
+      c => c.id === conversacion.id
+    );
+
+    // Conserva los mensajes completos que ya se habían consultado.
+    if (anterior && this.mensajesCargados.has(conversacion.id)) {
+      conversacion.mensajes = anterior.mensajes;
+    }
+
+    return conversacion;
+  });
+
+  return this.conversaciones;
+},
+
+  /**
+   * Busca una conversación en la caché.
+   */
+  _buscarConversacion(idConversacion) {
+    return this.conversaciones.find(
+      c => c.id === String(idConversacion)
+    ) || null;
+  },
+
+  /**
+   * Obtiene una conversación y sus mensajes.
+   * Si recargar es true, vuelve a consultar el servidor.
+   */
+  async obtenerConversacion(idConversacion, recargar = false) {
+    const id = String(idConversacion);
+    let conversacion = this._buscarConversacion(id);
+
+    if (!conversacion) {
+      await this.obtenerConversacionesUsuario();
+      conversacion = this._buscarConversacion(id);
+    }
+
+    if (!conversacion) return null;
+
+    if (recargar || !this.mensajesCargados.has(id)) {
+      const datos = await this._solicitar(
+        () => window.jzApi.get(
+          `mensajes/mensajes.php?conversacion_id=${encodeURIComponent(id)}`
+        )
+      );
+
+      conversacion.mensajes = (datos.mensajes || [])
+        .map(m => this._normalizarMensaje(m));
+
+      this.mensajesCargados.add(id);
+    }
+
+    return conversacion;
+  },
+
+  /**
+   * Actualiza la lista y los mensajes de una conversación.
+   */
+  async _actualizarConversacion(idConversacion) {
+    await this.obtenerConversacionesUsuario();
+    return this.obtenerConversacion(idConversacion, true);
+  },
+
+  /**
+   * Abre una conversación desde una publicación.
+   */
+  async abrirPorProducto(idProducto) {
     try {
-      localStorage.setItem(this.CLAVE, JSON.stringify(conversaciones));
+      const datos = await this._solicitar(
+        () => window.jzApi.post('mensajes/abrir-producto.php', {
+          producto_id: Number(idProducto)
+        })
+      );
+
+      const id = datos.conversacion.idConversacion;
+      const conversacion = await this._actualizarConversacion(id);
+
+      if (!conversacion) {
+        throw new Error('No fue posible recuperar la conversación.');
+      }
+
+      return { exito: true, conversacion };
+    } catch (error) {
+      return { exito: false, mensaje: error.message };
+    }
+  },
+
+  /**
+   * Abre una conversación desde un pedido.
+   */
+  async abrirPorPedido(idPedido) {
+    try {
+      const datos = await this._solicitar(
+        () => window.jzApi.post('mensajes/abrir-pedido.php', {
+          pedido_id: Number(idPedido)
+        })
+      );
+
+      const id = datos.conversacion.idConversacion;
+      const conversacion = await this._actualizarConversacion(id);
+
+      if (!conversacion) {
+        throw new Error('No fue posible recuperar la conversación.');
+      }
+
+      return { exito: true, conversacion };
+    } catch (error) {
+      return { exito: false, mensaje: error.message };
+    }
+  },
+
+  /**
+   * Envía un mensaje a una conversación.
+   */
+  async enviarMensaje(idConversacion, texto) {
+    const contenido = String(texto || '').trim();
+
+    if (!contenido) {
+      return { exito: false, mensaje: 'Escribe un mensaje antes de enviar.' };
+    }
+
+    if (contenido.length > this.MAX_CARACTERES) {
+      return {
+        exito: false,
+        mensaje: `El mensaje no puede superar ${this.MAX_CARACTERES} caracteres.`
+      };
+    }
+
+    try {
+      await this._solicitar(
+        () => window.jzApi.post('mensajes/enviar.php', {
+          conversacion_id: Number(idConversacion),
+          texto: contenido
+        })
+      );
+
+      const conversacion = await this._actualizarConversacion(idConversacion);
+
+      return { exito: true, conversacion };
+    } catch (error) {
+      return { exito: false, mensaje: error.message };
+    }
+  },
+
+  /**
+   * Marca como leídos los mensajes recibidos.
+   */
+  async marcarComoLeida(idConversacion) {
+    try {
+      await this._solicitar(
+        () => window.jzApi.post('mensajes/leidos.php', {
+          conversacion_id: Number(idConversacion)
+        })
+      );
+
+      const conversacion = this._buscarConversacion(idConversacion);
+
+      if (conversacion) {
+        conversacion.noLeidos = 0;
+      }
+
       return true;
     } catch (error) {
-      console.error('No fue posible guardar los mensajes:', error);
+      console.error('No fue posible marcar los mensajes como leídos:', error);
       return false;
     }
   },
 
-  _correoActual() {
-    const sesion = ApiAutenticacion.obtenerSesion();
-    return sesion ? String(sesion.correo || '').toLowerCase() : '';
-  },
-
-  _nombreDeUsuario(correo, respaldo) {
-    const usuarios = ApiAutenticacion._leer('jz_usuarios');
-    const usuario = usuarios.find(u => String(u.correo).toLowerCase() === correo);
-    return (usuario && usuario.nombre) || respaldo || correo;
-  },
-
-  _esParticipante(conversacion, correo) {
-    return Boolean(correo) && (conversacion.compradorCorreo === correo || conversacion.vendedorCorreo === correo);
-  },
-
-  _idConversacion(idProducto, correoComprador) {
-    return `${idProducto}__${correoComprador}`;
-  },
-
-  // Conversaciones del usuario activo, la más reciente primero
-  obtenerConversacionesUsuario() {
-    const yo = this._correoActual();
-    return this._leer()
-      .filter(c => this._esParticipante(c, yo))
-      .sort((a, b) => this.fechaUltimaActividad(b) - this.fechaUltimaActividad(a));
-  },
-
-  fechaUltimaActividad(conversacion) {
-    const ultimo = conversacion.mensajes[conversacion.mensajes.length - 1];
-    return ultimo ? ultimo.fecha : conversacion.fechaCreacion;
-  },
-
-  obtenerConversacion(idConversacion) {
-    const yo = this._correoActual();
-    const conversacion = this._leer().find(c => c.id === idConversacion);
-    return conversacion && this._esParticipante(conversacion, yo) ? conversacion : null;
-  },
-
-  // Busca o crea el chat entre el usuario activo (comprador) y el vendedor de la publicación
-  abrirPorProducto(idProducto) {
-    const yo = this._correoActual();
-    if (!yo) return { exito: false, mensaje: 'Debes iniciar sesión para enviar mensajes.' };
-
-    const producto = ApiProductos.obtenerPorId(idProducto);
-    if (!producto) return { exito: false, mensaje: 'La publicación ya no existe.' };
-
-    const correoVendedor = String(producto.vendedorCorreo || '').toLowerCase();
-    if (correoVendedor === yo) {
-      return { exito: false, mensaje: 'Esta es tu publicación. Las conversaciones aparecerán aquí cuando un comprador te escriba.' };
-    }
-
-    return this._buscarOCrear({
-      idProducto: producto.id,
-      tituloProducto: producto.titulo,
-      compradorCorreo: yo,
-      vendedorCorreo: correoVendedor,
-      vendedorNombre: producto.vendedorNombre
-    });
-  },
-
-  // Abre el chat ligado a un pedido (lo puede abrir el comprador o el vendedor)
-  abrirPorPedido(idPedido) {
-    const yo = this._correoActual();
-    if (!yo) return { exito: false, mensaje: 'Debes iniciar sesión para ver el chat.' };
-
-    const pedidos = JSON.parse(localStorage.getItem('jz_pedidos') || '[]');
-    const pedido = pedidos.find(p => String(p.idPedido) === String(idPedido));
-    const comprador = pedido ? String(pedido.compradorCorreo || '').toLowerCase() : '';
-    const vendedor = pedido ? String(pedido.vendedorCorreo || '').toLowerCase() : '';
-    if (!pedido || (yo !== comprador && yo !== vendedor)) {
-      return { exito: false, mensaje: 'No se encontró el pedido o no participas en él.' };
-    }
-
-    return this._buscarOCrear({
-      idProducto: pedido.idProducto,
-      tituloProducto: pedido.tituloProducto,
-      compradorCorreo: comprador,
-      vendedorCorreo: vendedor,
-      vendedorNombre: pedido.vendedorNombre
-    });
-  },
-
-  _buscarOCrear(datos) {
-    const conversaciones = this._leer();
-    const id = this._idConversacion(datos.idProducto, datos.compradorCorreo);
-    const existente = conversaciones.find(c => c.id === id);
-    if (existente) return { exito: true, conversacion: existente };
-
-    const nueva = {
-      id,
-      idProducto: datos.idProducto,
-      tituloProducto: datos.tituloProducto,
-      compradorCorreo: datos.compradorCorreo,
-      compradorNombre: this._nombreDeUsuario(datos.compradorCorreo),
-      vendedorCorreo: datos.vendedorCorreo,
-      vendedorNombre: this._nombreDeUsuario(datos.vendedorCorreo, datos.vendedorNombre),
-      fechaCreacion: Date.now(),
-      mensajes: [],
-      lecturas: {}
-    };
-    conversaciones.push(nueva);
-    if (!this._guardar(conversaciones)) {
-      return { exito: false, mensaje: 'No hay espacio disponible en el navegador para crear la conversación.' };
-    }
-    return { exito: true, conversacion: nueva };
-  },
-
-  enviarMensaje(idConversacion, texto) {
-    const yo = this._correoActual();
-    const contenido = String(texto || '').trim();
-    if (contenido === '') return { exito: false, mensaje: 'Escribe un mensaje antes de enviar.' };
-    if (contenido.length > this.MAX_CARACTERES) {
-      return { exito: false, mensaje: `El mensaje no puede superar ${this.MAX_CARACTERES} caracteres.` };
-    }
-
-    const conversaciones = this._leer();
-    const conversacion = conversaciones.find(c => c.id === idConversacion);
-    if (!conversacion || !this._esParticipante(conversacion, yo)) {
-      return { exito: false, mensaje: 'No participas en esta conversación.' };
-    }
-
-    const ahora = Date.now();
-    conversacion.mensajes.push({ de: yo, texto: contenido, fecha: ahora });
-    conversacion.lecturas[yo] = ahora;
-    if (!this._guardar(conversaciones)) {
-      return { exito: false, mensaje: 'No hay espacio disponible para guardar el mensaje.' };
-    }
-    return { exito: true, conversacion };
-  },
-
-  marcarComoLeida(idConversacion) {
-    const yo = this._correoActual();
-    const conversaciones = this._leer();
-    const conversacion = conversaciones.find(c => c.id === idConversacion);
-    if (!conversacion || !this._esParticipante(conversacion, yo)) return;
-    conversacion.lecturas[yo] = Date.now();
-    this._guardar(conversaciones);
-  },
-
-  // Cantidad de mensajes recibidos que el usuario activo aún no ha leído en una conversación
+  /**
+   * Devuelve los mensajes pendientes de leer en una conversación.
+   */
   contarNoLeidosDe(conversacion) {
-    const yo = this._correoActual();
-    const ultimaLectura = conversacion.lecturas[yo] || 0;
-    return conversacion.mensajes.filter(m => m.de !== yo && m.fecha > ultimaLectura).length;
+    return Number(conversacion?.noLeidos || 0);
   },
 
-  contarNoLeidos() {
-    return this.obtenerConversacionesUsuario()
-      .reduce((total, conversacion) => total + this.contarNoLeidosDe(conversacion), 0);
+  /**
+   * Consulta el total de mensajes pendientes de leer.
+   */
+  async contarNoLeidos() {
+    try {
+      const datos = await this._solicitar(
+        () => window.jzApi.get('mensajes/no-leidos.php')
+      );
+
+      return Number(datos.total || 0);
+    } catch (error) {
+      console.error('No fue posible consultar los mensajes no leídos:', error);
+      return 0;
+    }
   }
 };
