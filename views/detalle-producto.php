@@ -17,6 +17,9 @@
   <script src="../assets/js/api/guardianRutas.js" defer></script>
   <script src="../assets/js/api/apiMensajes.js" defer></script>
   <script src="../assets/js/api/apiProductos.js" defer></script>
+  <script src="../assets/js/api/apiPedidos.js" defer></script>
+  <script src="../assets/js/api/apiFavoritos.js" defer></script>
+  <script src="../assets/js/api/apiPerfil.js" defer></script>
 </head>
 <body>
   <header class="main-header">
