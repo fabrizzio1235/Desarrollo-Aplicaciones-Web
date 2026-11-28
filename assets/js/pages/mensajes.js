@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let refrescando = false;
     let usuarioId = null;
     let correoActual = '';
+    let pedidosUsuario = [];
 
-    // Traduce el estado de un pedido a la etiqueta que ve el usuario.
     function etiquetaEstado(estado) {
       switch (estado) {
         case 'pendiente': return 'Pendiente de entrega';
@@ -31,23 +31,48 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Estado del pedido más reciente de esta publicación para este comprador.
-    function estadoDelPedido(conversacion) {
-      try {
-        const pedidos = JSON.parse(localStorage.getItem('jz_pedidos') || '[]')
-          .filter(p =>
-            String(p.idProducto) === String(conversacion.idProducto) &&
-            String(p.compradorCorreo || '').toLowerCase() === conversacion.compradorCorreo
-          )
-          .sort((a, b) =>
-            new Date(b.fechaCreacion || 0) - new Date(a.fechaCreacion || 0)
-          );
-
-        return pedidos.length ? pedidos[0].estado : null;
-      } catch (error) {
-        console.error('No fue posible consultar los pedidos locales:', error);
-        return null;
+    async function cargarPedidosUsuario() {
+      if (!window.jzPedidos) {
+        pedidosUsuario = [];
+        return;
       }
+
+      const [respCompras, respVentas] = await Promise.all([
+        window.jzPedidos.listar('comprador'),
+        window.jzPedidos.listar('vendedor')
+      ]);
+
+      const compras = respCompras.ok && Array.isArray(respCompras.datos?.pedidos)
+        ? respCompras.datos.pedidos.map(p => ({
+            ...p,
+            compradorCorreo: String(p.compradorCorreo || correoActual).toLowerCase()
+          }))
+        : [];
+
+      const ventas = respVentas.ok && Array.isArray(respVentas.datos?.pedidos)
+        ? respVentas.datos.pedidos.map(p => ({
+            ...p,
+            compradorCorreo: String(p.compradorCorreo || '').toLowerCase()
+          }))
+        : [];
+
+      const mapa = new Map();
+      [...compras, ...ventas].forEach(p => {
+        mapa.set(Number(p.idPedido), p);
+      });
+      pedidosUsuario = Array.from(mapa.values());
+    }
+
+    function estadoDelPedido(conversacion) {
+      const correoComp = String(conversacion.compradorCorreo || '').toLowerCase();
+      const coincidencias = pedidosUsuario
+        .filter(p =>
+          Number(p.idProducto) === Number(conversacion.idProducto) &&
+          String(p.compradorCorreo || '').toLowerCase() === correoComp
+        )
+        .sort((a, b) => Number(b.idPedido || 0) - Number(a.idPedido || 0));
+
+      return coincidencias.length ? coincidencias[0].estado : null;
     }
 
     function nombreInterlocutor(conversacion) {
@@ -57,8 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatoHora(marcaTiempo) {
-      const fecha = new Date(marcaTiempo);
-
+      const fecha = new Date(String(marcaTiempo || '').replace(' ', 'T'));
       if (Number.isNaN(fecha.getTime())) return '';
 
       const hora = fecha.toLocaleTimeString('es-MX', {
@@ -67,13 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const esHoy = fecha.toDateString() === new Date().toDateString();
-
       return esHoy
         ? hora
-        : `${fecha.toLocaleDateString('es-MX', {
-            day: '2-digit',
-            month: 'short'
-          })} ${hora}`;
+        : `${fecha.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })} ${hora}`;
     }
 
     function mostrarError(texto) {
@@ -86,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
       textoVacio.textContent = texto;
     }
 
-    // Lista lateral de conversaciones.
     function renderLista() {
       const conversaciones = ApiMensajes.conversaciones;
 
@@ -110,19 +129,16 @@ document.addEventListener('DOMContentLoaded', () => {
         referencia.textContent = conversacion.tituloProducto;
 
         const ultimo = conversacion.mensajes[conversacion.mensajes.length - 1];
-
         const vistaPrevia = document.createElement('small');
         vistaPrevia.className = 'chat-preview';
 
         if (ultimo) {
           const esPropio = Number(ultimo.emisorId) === usuarioId ||
             ultimo.de === correoActual;
-
           const prefijo = esPropio ? 'Tú: ' : '';
           const recorte = ultimo.texto.length > 45
             ? `${ultimo.texto.slice(0, 45)}…`
             : ultimo.texto;
-
           vistaPrevia.textContent = prefijo + recorte;
         } else {
           vistaPrevia.textContent = 'Aún no hay mensajes';
@@ -131,15 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
         boton.append(nombre, referencia, vistaPrevia);
 
         const noLeidos = ApiMensajes.contarNoLeidosDe(conversacion);
-
         if (noLeidos > 0 && conversacion.id !== String(idActivo)) {
           const contador = document.createElement('span');
           contador.className = 'badge unread-count';
           contador.textContent = String(noLeidos);
-          contador.setAttribute(
-            'aria-label',
-            `${noLeidos} mensajes sin leer`
-          );
+          contador.setAttribute('aria-label', `${noLeidos} mensajes sin leer`);
           boton.appendChild(contador);
         }
 
@@ -152,11 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Encabezado: interlocutor, publicación y estado del pedido.
     function renderEncabezado(conversacion) {
       tituloInterlocutor.textContent = nombreInterlocutor(conversacion);
       contextoChat.replaceChildren();
-
       contextoChat.append('Publicación: ');
 
       if (conversacion.tituloProducto) {
@@ -170,10 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const estado = estadoDelPedido(conversacion);
       const insignia = document.createElement('span');
-
       insignia.className = `status-badge status-${estado || 'pendiente'}`;
       insignia.textContent = etiquetaEstado(estado);
-
       contextoChat.append(' · ', insignia);
     }
 
@@ -185,27 +193,22 @@ document.addEventListener('DOMContentLoaded', () => {
         vacio.className = 'chat-empty';
         vacio.textContent =
           'Todavía no hay mensajes. Saluda y acuerda el punto de encuentro en el campus.';
-
         contenedorMensajes.appendChild(vacio);
       }
 
       conversacion.mensajes.forEach(mensaje => {
         const burbuja = document.createElement('article');
-
         const esPropio = Number(mensaje.emisorId) === usuarioId;
-
         burbuja.className = `message ${esPropio ? 'sent' : 'received'}`;
 
         const texto = document.createElement('p');
         texto.textContent = mensaje.texto;
 
         const hora = document.createElement('time');
-        const fecha = new Date(mensaje.fecha);
-
+        const fecha = new Date(String(mensaje.fecha || '').replace(' ', 'T'));
         if (!Number.isNaN(fecha.getTime())) {
           hora.dateTime = fecha.toISOString();
         }
-
         hora.textContent = formatoHora(mensaje.fecha);
 
         burbuja.append(texto, hora);
@@ -213,19 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       contenedorMensajes.scrollTop = contenedorMensajes.scrollHeight;
-
       mensajesMostrados = conversacion.mensajes.length;
-
       ultimoMensajeMostrado = conversacion.mensajes.length
         ? conversacion.mensajes[conversacion.mensajes.length - 1].id
         : null;
     }
 
-    // Abre una conversación y carga sus mensajes desde el servidor.
     async function activarConversacion(id) {
       try {
         const conversacion = await ApiMensajes.obtenerConversacion(id, true);
-
         if (!conversacion) {
           mostrarError('No se encontró la conversación solicitada.');
           return;
@@ -233,16 +232,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         idActivo = String(id);
         mostrarError('');
-
         panelVacio.hidden = true;
         ventanaChat.hidden = false;
 
         await ApiMensajes.marcarComoLeida(idActivo);
-        await ApiMensajes.obtenerConversacionesUsuario();
+        await Promise.all([
+          ApiMensajes.obtenerConversacionesUsuario(),
+          cargarPedidosUsuario()
+        ]);
 
-        // Recupera la conversación actualizada después de actualizar la lista.
         const actualizada = await ApiMensajes.obtenerConversacion(idActivo);
-
         renderEncabezado(actualizada || conversacion);
         renderMensajes(actualizada || conversacion);
         renderLista();
@@ -251,20 +250,14 @@ document.addEventListener('DOMContentLoaded', () => {
           window.actualizarInsigniaMensajes();
         }
 
-        history.replaceState(
-          null,
-          '',
-          `mensajes.php?chat=${encodeURIComponent(idActivo)}`
-        );
+        history.replaceState(null, '', `mensajes.php?chat=${encodeURIComponent(idActivo)}`);
       } catch (error) {
         mostrarError(error.message || 'No fue posible abrir la conversación.');
       }
     }
 
-    // Actualiza conversaciones y mensajes consultando el backend.
     async function refrescar() {
       if (refrescando) return;
-
       refrescando = true;
 
       try {
@@ -273,11 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!idActivo) {
           renderLista();
         } else {
-          const conversacion = await ApiMensajes.obtenerConversacion(
-            idActivo,
-            true
-          );
-
+          const conversacion = await ApiMensajes.obtenerConversacion(idActivo, true);
           if (conversacion) {
             const ultimoMensaje = conversacion.mensajes.length
               ? conversacion.mensajes[conversacion.mensajes.length - 1].id
@@ -289,20 +278,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (hayCambios) {
               await ApiMensajes.marcarComoLeida(idActivo);
-
               await ApiMensajes.obtenerConversacionesUsuario();
-
               const actualizada = await ApiMensajes.obtenerConversacion(idActivo);
-
               renderMensajes(actualizada || conversacion);
             }
 
             const actual = ApiMensajes._buscarConversacion(idActivo);
-
             if (actual) {
               renderEncabezado(actual);
             }
-
             renderLista();
           }
         }
@@ -317,30 +301,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Respuestas rápidas.
     document.querySelectorAll('.quick-replies .chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const sugerencia = chip.dataset.text || '';
-
         inputMensaje.value = inputMensaje.value.trim()
           ? `${inputMensaje.value.trim()} ${sugerencia}`
           : sugerencia;
-
         inputMensaje.focus();
       });
     });
 
-    // Envío de mensajes.
     formulario.addEventListener('submit', async evento => {
       evento.preventDefault();
-
       if (!idActivo) return;
 
-      const resultado = await ApiMensajes.enviarMensaje(
-        idActivo,
-        inputMensaje.value
-      );
-
+      const resultado = await ApiMensajes.enviarMensaje(idActivo, inputMensaje.value);
       if (!resultado.exito) {
         mostrarError(resultado.mensaje);
         return;
@@ -350,16 +325,10 @@ document.addEventListener('DOMContentLoaded', () => {
       mostrarError('');
 
       await ApiMensajes.obtenerConversacionesUsuario();
-
-      const conversacion = await ApiMensajes.obtenerConversacion(
-        idActivo,
-        true
-      );
-
+      const conversacion = await ApiMensajes.obtenerConversacion(idActivo, true);
       if (conversacion) {
         renderMensajes(conversacion);
       }
-
       renderLista();
 
       if (window.actualizarInsigniaMensajes) {
@@ -369,17 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     inputMensaje.maxLength = ApiMensajes.MAX_CARACTERES;
 
-    // Cargar y validar la sesión PHP.
     try {
       const sesion = await window.jzAuth.cargarSesion();
-
       if (!sesion.ok || !sesion.datos.autenticado) {
         mostrarPanelVacio('Tu sesión ha expirado. Inicia sesión nuevamente.');
         return;
       }
 
       const usuario = sesion.datos.usuario;
-
       usuarioId = Number(usuario.id);
       correoActual = String(usuario.correo || '').toLowerCase();
 
@@ -388,30 +354,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Obtener las conversaciones desde MariaDB.
-      await ApiMensajes.obtenerConversacionesUsuario();
+      await Promise.all([
+        ApiMensajes.obtenerConversacionesUsuario(),
+        cargarPedidosUsuario()
+      ]);
 
-      // Selección inicial según los parámetros de la URL.
       const parametros = new URLSearchParams(window.location.search);
-
       let idInicial = parametros.get('chat');
       let mensajeInicial = '';
 
       if (!idInicial && parametros.get('pedido')) {
-        const resultado = await ApiMensajes.abrirPorPedido(
-          parametros.get('pedido')
-        );
-
+        const resultado = await ApiMensajes.abrirPorPedido(parametros.get('pedido'));
         if (resultado.exito) {
           idInicial = resultado.conversacion.id;
         } else {
           mensajeInicial = resultado.mensaje;
         }
       } else if (!idInicial && parametros.get('producto')) {
-        const resultado = await ApiMensajes.abrirPorProducto(
-          parametros.get('producto')
-        );
-
+        const resultado = await ApiMensajes.abrirPorProducto(parametros.get('producto'));
         if (resultado.exito) {
           idInicial = resultado.conversacion.id;
         } else {
@@ -420,7 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const conversaciones = ApiMensajes.conversaciones;
-
       if (!idInicial && conversaciones.length > 0 && !mensajeInicial) {
         idInicial = conversaciones[0].id;
       }
@@ -439,14 +398,10 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarPanelVacio('Selecciona una conversación de la lista.');
       }
 
-      // Actualización periódica desde el backend.
       setInterval(refrescar, 3000);
-
     } catch (error) {
       console.error('Error al inicializar la mensajería:', error);
-      mostrarPanelVacio(
-        error.message || 'No fue posible cargar la mensajería.'
-      );
+      mostrarPanelVacio(error.message || 'No fue posible cargar la mensajería.');
     }
   }
 

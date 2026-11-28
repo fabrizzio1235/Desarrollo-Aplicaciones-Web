@@ -10,12 +10,10 @@
   <link rel="stylesheet" href="../assets/css/productos.css">
   <link rel="stylesheet" href="../assets/css/favoritos.css">
 
-  <script src="../assets/js/api/apiAutenticacion.js" defer></script>
   <script src="../assets/js/core/ApiClient.js" defer></script>
   <script src="../assets/js/core/AuthService.js" defer></script>
   <script src="../assets/js/api/guardianRutas.js" defer></script>
   <script src="../assets/js/api/apiMensajes.js" defer></script>
-  <script src="../assets/js/api/apiProductos.js" defer></script>
   <script src="../assets/js/api/apiFavoritos.js" defer></script>
   <script src="../assets/js/pages/favoritos.js" defer></script>
 </head>

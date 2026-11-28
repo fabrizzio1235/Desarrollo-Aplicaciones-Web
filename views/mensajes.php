@@ -1,6 +1,5 @@
 <?php require __DIR__ . '/../config/guard_vista.php'; ?>
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -10,11 +9,10 @@
   <link rel="stylesheet" href="../assets/css/componentes.css">
   <link rel="stylesheet" href="../assets/css/mensajes.css">
 
-  <script src="../assets/js/api/apiAutenticacion.js" defer></script>
   <script src="../assets/js/core/ApiClient.js" defer></script>
   <script src="../assets/js/core/AuthService.js" defer></script>
   <script src="../assets/js/api/guardianRutas.js" defer></script>
-  <script src="../assets/js/api/apiProductos.js" defer></script>
+  <script src="../assets/js/api/apiPedidos.js" defer></script>
   <script src="../assets/js/api/apiMensajes.js" defer></script>
 </head>
 <body>
