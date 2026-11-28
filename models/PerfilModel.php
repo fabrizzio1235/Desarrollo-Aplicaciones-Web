@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// Gestión de perfil académico, reputación y reseñas post-entrega.
+/**
+ * Gestión de perfil académico, reputación y reseñas post-entrega.
+ */
 final class PerfilModel
 {
     private PDO $db;
@@ -11,6 +13,15 @@ final class PerfilModel
         $this->db = $db ?? Database::obtener();
     }
 
+    public function campusIdPorClave(string $clave): ?int
+    {
+        $st = $this->db->prepare('SELECT id FROM campus WHERE clave = :clave LIMIT 1');
+        $st->execute([':clave' => $clave]);
+        $id = $st->fetchColumn();
+
+        return $id === false ? null : (int) $id;
+    }
+
     /**
      * Obtiene datos del usuario, métricas de actividad y reseñas recibidas.
      * @return array<string, mixed>|null
@@ -18,10 +29,14 @@ final class PerfilModel
     public function obtenerPerfilCompleto(int $usuarioId): ?array
     {
         $st = $this->db->prepare(
-            'SELECT id, nombre, correo, campus, facultad, descripcion,
-                    puntos_frecuentes, horarios_habituales, foto_ruta, creado_en
-               FROM usuarios
-              WHERE id = :id
+            'SELECT u.id, u.nombre, u.correo,
+                    c.clave AS campus, c.nombre AS campus_nombre,
+                    u.facultad, u.descripcion,
+                    u.puntos_frecuentes, u.horarios_habituales,
+                    u.foto_ruta, u.creado_en
+               FROM usuarios u
+               JOIN campus c ON c.id = u.campus_id
+              WHERE u.id = :id
               LIMIT 1'
         );
         $st->execute([':id' => $usuarioId]);
@@ -72,7 +87,8 @@ final class PerfilModel
                 'id'                 => (int) $usuario['id'],
                 'nombre'             => (string) $usuario['nombre'],
                 'correo'             => (string) $usuario['correo'],
-                'campus'             => (string) ($usuario['campus'] ?? ''),
+                'campus'             => (string) $usuario['campus'],
+                'campusNombre'       => (string) $usuario['campus_nombre'],
                 'facultad'           => (string) ($usuario['facultad'] ?? ''),
                 'descripcion'        => (string) ($usuario['descripcion'] ?? ''),
                 'puntosFrecuentes'   => (string) ($usuario['puntos_frecuentes'] ?? ''),
@@ -94,7 +110,7 @@ final class PerfilModel
     public function actualizarPerfil(
         int $usuarioId,
         string $nombre,
-        string $campus,
+        int $campusId,
         string $facultad,
         string $descripcion,
         string $puntosFrecuentes,
@@ -103,7 +119,7 @@ final class PerfilModel
         $st = $this->db->prepare(
             'UPDATE usuarios
                 SET nombre = :nombre,
-                    campus = :campus,
+                    campus_id = :campus_id,
                     facultad = :facultad,
                     descripcion = :descripcion,
                     puntos_frecuentes = :puntos,
@@ -112,7 +128,7 @@ final class PerfilModel
         );
         $st->execute([
             ':nombre'      => $nombre,
-            ':campus'      => $campus,
+            ':campus_id'   => $campusId,
             ':facultad'    => $facultad,
             ':descripcion' => $descripcion,
             ':puntos'      => $puntosFrecuentes,
@@ -122,7 +138,7 @@ final class PerfilModel
     }
 
     /**
-     * Registra una calificación (1..5 estrellas) para un pedido completado donde el comprador evalúa al vendedor.
+     * Registra una calificación (1..5 estrellas) para un pedido completado.
      */
     public function crearResena(int $pedidoId, int $compradorId, int $estrellas, string $comentario): void
     {
@@ -148,16 +164,23 @@ final class PerfilModel
             throw new DomainException('Este pedido ya fue calificado anteriormente.');
         }
 
-        $stIns = $this->db->prepare(
-            'INSERT INTO resenas (pedido_id, comprador_id, vendedor_id, estrellas, comentario)
-             VALUES (:pid, :comp_id, :vend_id, :estrellas, :com)'
-        );
-        $stIns->execute([
-            ':pid'       => $pedidoId,
-            ':comp_id'   => $compradorId,
-            ':vend_id'   => (int) $pedido['vendedor_id'],
-            ':estrellas' => $estrellas,
-            ':com'       => $comentario,
-        ]);
+        try {
+            $stIns = $this->db->prepare(
+                'INSERT INTO resenas (pedido_id, comprador_id, vendedor_id, estrellas, comentario)
+                 VALUES (:pid, :comp_id, :vend_id, :estrellas, :com)'
+            );
+            $stIns->execute([
+                ':pid'       => $pedidoId,
+                ':comp_id'   => $compradorId,
+                ':vend_id'   => (int) $pedido['vendedor_id'],
+                ':estrellas' => $estrellas,
+                ':com'       => $comentario,
+            ]);
+        } catch (PDOException $e) {
+            if (($e->errorInfo[1] ?? 0) === 1062) {
+                throw new DomainException('Este pedido ya fue calificado anteriormente.', 0, $e);
+            }
+            throw $e;
+        }
     }
 }

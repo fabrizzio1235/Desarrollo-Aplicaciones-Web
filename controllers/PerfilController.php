@@ -3,14 +3,6 @@ declare(strict_types=1);
 
 final class PerfilController
 {
-    private const CAMPUS_VALIDOS = [
-        'exactas',
-        'salud',
-        'sociales',
-        'biologicas',
-        'arquitectura',
-    ];
-
     private PerfilModel $perfil;
 
     public function __construct(?PerfilModel $perfil = null)
@@ -40,26 +32,30 @@ final class PerfilController
         if (mb_strlen($nombre) < 3) {
             Http::fail(400, 'Ingresa tu nombre completo (mínimo 3 caracteres).');
         }
-        if (!in_array($campus, self::CAMPUS_VALIDOS, true)) {
+
+        $campusId = $campus !== '' ? $this->perfil->campusIdPorClave($campus) : null;
+        if ($campusId === null) {
             Http::fail(400, 'Selecciona un campus UADY válido.');
         }
 
         $this->perfil->actualizarPerfil(
             $usuarioId,
             $nombre,
-            $campus,
+            $campusId,
             $facultad,
             $descripcion,
             $puntosFrecuentes,
             $horariosHabituales
         );
 
-        $_SESSION['usuario']['nombre']             = $nombre;
-        $_SESSION['usuario']['campus']             = $campus;
-        $_SESSION['usuario']['facultad']           = $facultad;
-        $_SESSION['usuario']['descripcion']        = $descripcion;
-        $_SESSION['usuario']['puntosFrecuentes']   = $puntosFrecuentes;
-        $_SESSION['usuario']['horariosHabituales'] = $horariosHabituales;
+        if (isset($_SESSION['usuario']) && is_array($_SESSION['usuario'])) {
+            $_SESSION['usuario']['nombre']             = $nombre;
+            $_SESSION['usuario']['campus']             = $campus;
+            $_SESSION['usuario']['facultad']           = $facultad;
+            $_SESSION['usuario']['descripcion']        = $descripcion;
+            $_SESSION['usuario']['puntosFrecuentes']   = $puntosFrecuentes;
+            $_SESSION['usuario']['horariosHabituales'] = $horariosHabituales;
+        }
 
         Http::ok([
             'nombre'             => $nombre,
@@ -78,7 +74,7 @@ final class PerfilController
         $rawEstrellas = $in['estrellas'] ?? $in['calificacion'] ?? 0;
         $estrellas = is_numeric($rawEstrellas) ? (int) $rawEstrellas : 0;
 
-        $comentarioCrudo = trim((string) ($in['comentario'] ?? ''));
+        $comentarioCrudo = trim(Validator::cadena($in['comentario'] ?? ''));
         if ($comentarioCrudo === '') {
             Http::fail(400, 'El comentario de la reseña es obligatorio.');
         }

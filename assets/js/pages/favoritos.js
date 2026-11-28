@@ -2,111 +2,152 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
   const listaEl = document.getElementById('lista-favoritos');
-  const contadorEl = document.getElementById('favoritos-contador');
   const vacioEl = document.getElementById('favoritos-vacio');
-  if (!listaEl) return;
+  const contadorEl = document.getElementById('favoritos-contador');
+  if (!listaEl || !vacioEl) return;
 
-  const esc = (txt) => String(txt ?? '').replace(/[&<>"']/g, (m) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[m]));
+  const moneda = valor => `$${Number(valor || 0).toFixed(2)} MXN`;
+  const placeholder = '../assets/images/image-placeholder.jpg';
 
-  const moneda = (n) => new Intl.NumberFormat('es-MX', {
-    style: 'currency',
-    currency: 'MXN'
-  }).format(Number(n || 0));
-
-  const resolverRutaImagen = (ruta) => {
+  function resolverRutaImagen(ruta) {
     const limpia = String(ruta || '').trim();
-    if (!limpia) return '../assets/images/image-placeholder.jpg';
+    if (!limpia) return placeholder;
     if (limpia.startsWith('../') || limpia.startsWith('http')) return limpia;
     return `../${limpia.replace(/^\/+/, '')}`;
-  };
+  }
+
+  function crearTarjeta(producto) {
+    const idProducto = Number(producto.id || 0);
+
+    const tarjeta = document.createElement('article');
+    tarjeta.className = 'product-card';
+    tarjeta.dataset.productoId = String(idProducto);
+
+    const figura = document.createElement('figure');
+    figura.className = 'product-media';
+
+    const imagen = document.createElement('img');
+    imagen.src = resolverRutaImagen(producto.imagen);
+    imagen.alt = `Imagen de ${producto.titulo || 'publicación'}`;
+    imagen.onerror = () => {
+      imagen.onerror = null;
+      imagen.src = placeholder;
+    };
+
+    const modalidad = document.createElement('span');
+    modalidad.className = producto.modalidad === 'subasta' ? 'tag tag-subasta' : 'tag tag-fijo';
+    modalidad.textContent = producto.modalidad === 'subasta' ? 'Subasta' : 'Precio fijo';
+    figura.append(imagen, modalidad);
+
+    const cuerpo = document.createElement('div');
+    cuerpo.className = 'product-body';
+
+    const categoria = document.createElement('span');
+    categoria.className = 'product-category';
+    categoria.textContent = producto.categoriaNombre || producto.categoria || 'Producto';
+
+    const titulo = document.createElement('h2');
+    titulo.className = 'product-title';
+    const enlaceTitulo = document.createElement('a');
+    enlaceTitulo.href = `detalle-producto.php?id=${encodeURIComponent(idProducto)}`;
+    enlaceTitulo.textContent = producto.titulo || 'Publicación sin título';
+    titulo.appendChild(enlaceTitulo);
+
+    const precio = document.createElement('p');
+    precio.className = 'product-price';
+    precio.textContent = producto.modalidad === 'subasta'
+      ? `Puja actual: ${moneda(producto.precio)}`
+      : moneda(producto.precio);
+
+    const entrega = document.createElement('p');
+    entrega.className = 'product-delivery';
+    const etiquetaEntrega = document.createElement('strong');
+    etiquetaEntrega.textContent = 'Entrega: ';
+    const textoEntrega = document.createElement('span');
+    textoEntrega.textContent = producto.entregaTexto || 'Punto por acordar';
+    entrega.append(etiquetaEntrega, textoEntrega);
+
+    const vendedor = document.createElement('footer');
+    vendedor.className = 'product-seller';
+    const nombreVendedor = document.createElement('span');
+    nombreVendedor.textContent = producto.vendedorNombre || 'Estudiante UADY';
+    const rating = document.createElement('span');
+    rating.className = 'rating';
+    const totalResenas = Number(producto.vendedorTotalResenas || 0);
+    rating.textContent = totalResenas > 0
+      ? `★ ${Number(producto.vendedorPromedio || 0).toFixed(1)} (${totalResenas})`
+      : 'Sin calificaciones';
+    vendedor.append(nombreVendedor, rating);
+
+    const acciones = document.createElement('div');
+    acciones.className = 'card-actions';
+
+    const ver = document.createElement('a');
+    ver.className = 'btn btn-primary btn-sm';
+    ver.href = `detalle-producto.php?id=${encodeURIComponent(idProducto)}`;
+    ver.textContent = 'Ver publicación';
+
+    const quitar = document.createElement('button');
+    quitar.type = 'button';
+    quitar.className = 'btn btn-outline btn-sm';
+    quitar.dataset.action = 'quitar-favorito';
+    quitar.dataset.id = String(idProducto);
+    quitar.textContent = 'Quitar de favoritos';
+
+    acciones.append(ver, quitar);
+    cuerpo.append(categoria, titulo, precio, entrega, vendedor, acciones);
+    tarjeta.append(figura, cuerpo);
+    return tarjeta;
+  }
+
+  function mostrarError(texto) {
+    const aviso = document.createElement('p');
+    aviso.className = 'feedback-msg';
+    aviso.textContent = texto;
+    listaEl.replaceChildren(aviso);
+    listaEl.hidden = false;
+    vacioEl.hidden = true;
+  }
 
   async function cargarFavoritos() {
     if (!window.jzFavoritos) {
-      listaEl.innerHTML = '<p class="feedback-msg">Error: servicio de favoritos no disponible.</p>';
+      mostrarError('No se pudo cargar el servicio de favoritos.');
       return;
     }
 
-    try {
-      const res = await window.jzFavoritos.listar();
-      if (!res || !res.ok) {
-        if (vacioEl) vacioEl.hidden = true;
-        listaEl.hidden = false;
-        listaEl.innerHTML = `<p class="feedback-msg">${esc(res?.mensaje || 'No se pudieron cargar tus favoritos.')}</p>`;
-        return;
-      }
+    const res = await window.jzFavoritos.listar();
+    if (!res.ok) {
+      mostrarError(res.mensaje || 'No se pudieron cargar tus favoritos.');
+      return;
+    }
 
-      const lista = Array.isArray(res.datos?.favoritos)
-        ? res.datos.favoritos
-        : (Array.isArray(res.datos) ? res.datos : []);
+    const productos = Array.isArray(res.datos?.favoritos) ? res.datos.favoritos : [];
+    listaEl.replaceChildren();
+    productos.forEach(producto => listaEl.appendChild(crearTarjeta(producto)));
 
-      if (contadorEl) {
-        contadorEl.textContent = lista.length === 1
-          ? '1 artículo guardado'
-          : `${lista.length} artículos guardados`;
-      }
+    vacioEl.hidden = productos.length > 0;
+    listaEl.hidden = productos.length === 0;
 
-      if (lista.length === 0) {
-        listaEl.innerHTML = '';
-        listaEl.hidden = true;
-        if (vacioEl) vacioEl.hidden = false;
-        return;
-      }
-
-      if (vacioEl) vacioEl.hidden = true;
-      listaEl.hidden = false;
-
-      listaEl.innerHTML = lista.map((p) => {
-        const idProducto = Number(p.id || p.producto_id || 0);
-        const imagen = resolverRutaImagen(p.imagen || p.imagen_ruta || p.foto);
-        const categoria = p.categoriaNombre || p.categoria || 'General';
-        const modalidad = p.modalidad === 'subasta' ? 'Subasta' : 'Precio fijo';
-        const entrega = p.entregaTexto || p.campus || 'Entrega en campus UADY';
-        const vendedor = p.vendedorNombre || p.vendedor || 'Estudiante UADY';
-        const promedio = Number(p.vendedorPromedio || 0).toFixed(1);
-
-        return `
-          <article class="product-card" data-id="${idProducto}">
-            <img src="${esc(imagen)}" alt="${esc(p.titulo)}" class="product-card__image">
-            <div class="product-card__body">
-              <span class="badge">${esc(categoria)} · ${esc(modalidad)}</span>
-              <h3><a href="detalle-producto.php?id=${idProducto}">${esc(p.titulo)}</a></h3>
-              <p class="product-price">${moneda(p.precio)}</p>
-              <p class="product-meta">Entrega: ${esc(entrega)}</p>
-              <p class="product-meta">Vendedor: ${esc(vendedor)} (★ ${promedio})</p>
-              <div class="card-actions">
-                <a href="detalle-producto.php?id=${idProducto}" class="btn btn-primary btn-sm">Ver artículo</a>
-                <button type="button" class="btn btn-secondary btn-sm" data-action="quitar-favorito" data-id="${idProducto}">Quitar</button>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join('');
-    } catch (err) {
-      if (vacioEl) vacioEl.hidden = true;
-      listaEl.hidden = false;
-      listaEl.innerHTML = `<p class="feedback-msg">${esc(err.message || 'Error al cargar favoritos.')}</p>`;
+    if (contadorEl) {
+      contadorEl.textContent = productos.length === 1
+        ? 'Tienes 1 publicación guardada.'
+        : `Tienes ${productos.length} publicaciones guardadas.`;
     }
   }
 
-  listaEl.addEventListener('click', async (e) => {
-    const btn = e.target.closest('[data-action="quitar-favorito"]');
-    if (!btn) return;
+  listaEl.addEventListener('click', async evento => {
+    const boton = evento.target.closest('[data-action="quitar-favorito"]');
+    if (!boton) return;
 
-    btn.disabled = true;
-    try {
-      const res = await window.jzFavoritos.toggle(Number(btn.dataset.id));
-      if (!res || !res.ok) {
-        alert(res?.mensaje || 'No se pudo quitar el artículo de favoritos.');
-        btn.disabled = false;
-        return;
-      }
-      await cargarFavoritos();
-    } catch (err) {
-      alert(err.message || 'No se pudo actualizar favoritos.');
-      btn.disabled = false;
+    boton.disabled = true;
+    const res = await window.jzFavoritos.toggle(Number(boton.dataset.id));
+    if (!res.ok) {
+      window.alert(res.mensaje || 'No se pudo actualizar tus favoritos.');
+      boton.disabled = false;
+      return;
     }
+
+    await cargarFavoritos();
   });
 
   await cargarFavoritos();
