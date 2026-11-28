@@ -16,6 +16,7 @@
   <script src="../assets/js/api/guardianRutas.js" defer></script>
   <script src="../assets/js/api/apiMensajes.js" defer></script>
   <script src="../assets/js/api/apiProductos.js" defer></script>
+  <script src="../assets/js/core/PreferenciasCatalogoStorage.js" defer></script>
   <script src="../assets/js/pages/catalogo.js" defer></script>
 </head>
 <body>
@@ -84,8 +85,6 @@
             <input type="number" name="precio_max" min="0" placeholder="Máx $" aria-label="Precio máximo">
           </div>
         </fieldset>
-
-        <button type="submit" class="btn btn-primary btn-block">Aplicar filtros</button>
       </form>
     </aside>
 
