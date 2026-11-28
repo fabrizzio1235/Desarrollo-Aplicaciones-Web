@@ -18,7 +18,11 @@ final class PerfilModel
     public function obtenerPerfilCompleto(int $usuarioId): ?array
     {
         $st = $this->db->prepare(
-            'SELECT id, nombre, correo, facultad, avatar, creado_en FROM usuarios WHERE id = :id LIMIT 1'
+            'SELECT id, nombre, correo, campus, facultad, descripcion,
+                    puntos_frecuentes, horarios_habituales, foto_ruta, creado_en
+               FROM usuarios
+              WHERE id = :id
+              LIMIT 1'
         );
         $st->execute([':id' => $usuarioId]);
         $usuario = $st->fetch();
@@ -27,9 +31,9 @@ final class PerfilModel
         }
 
         $stRep = $this->db->prepare(
-            'SELECT COALESCE(ROUND(AVG(calificacion), 1), 0) AS promedio, COUNT(*) AS total
+            'SELECT COALESCE(ROUND(AVG(estrellas), 1), 0) AS promedio, COUNT(*) AS total
                FROM resenas
-              WHERE evaluado_id = :uid'
+              WHERE vendedor_id = :uid'
         );
         $stRep->execute([':uid' => $usuarioId]);
         $rep = $stRep->fetch() ?: ['promedio' => 0, 'total' => 0];
@@ -47,33 +51,35 @@ final class PerfilModel
         $comprasCompletadas = (int) $stCompras->fetchColumn();
 
         $stResenas = $this->db->prepare(
-            'SELECT r.id, r.calificacion, r.comentario, r.creado_en,
+            'SELECT r.id, r.estrellas, r.estrellas AS calificacion, r.comentario, r.creado_en,
                     u.nombre AS autorNombre, pr.titulo AS productoTitulo
                FROM resenas r
-               JOIN usuarios u  ON u.id = r.evaluador_id
-               JOIN pedidos ped ON ped.id = r.pedido_id
+               JOIN usuarios u   ON u.id = r.comprador_id
+               JOIN pedidos ped  ON ped.id = r.pedido_id
                JOIN productos pr ON pr.id = ped.producto_id
-              WHERE r.evaluado_id = :uid
+              WHERE r.vendedor_id = :uid
               ORDER BY r.creado_en DESC, r.id DESC'
         );
         $stResenas->execute([':uid' => $usuarioId]);
 
-        $avatar = (string) ($usuario['avatar'] ?? '');
-        if ($avatar !== '' && !str_starts_with($avatar, '../') && !str_starts_with($avatar, 'http')) {
-            $avatar = '../' . ltrim($avatar, '/');
-        }
-        if ($avatar === '') {
-            $avatar = '../assets/images/image-placeholder.jpg';
+        $fotoRuta = trim((string) ($usuario['foto_ruta'] ?? ''));
+        if ($fotoRuta !== '' && !str_starts_with($fotoRuta, '../') && !str_starts_with($fotoRuta, 'http')) {
+            $fotoRuta = '../' . ltrim($fotoRuta, '/');
         }
 
         return [
             'usuario' => [
-                'id'        => (int) $usuario['id'],
-                'nombre'    => (string) $usuario['nombre'],
-                'correo'    => (string) $usuario['correo'],
-                'facultad'  => (string) ($usuario['facultad'] ?? ''),
-                'avatar'    => $avatar,
-                'creado_en' => (string) $usuario['creado_en'],
+                'id'                 => (int) $usuario['id'],
+                'nombre'             => (string) $usuario['nombre'],
+                'correo'             => (string) $usuario['correo'],
+                'campus'             => (string) ($usuario['campus'] ?? ''),
+                'facultad'           => (string) ($usuario['facultad'] ?? ''),
+                'descripcion'        => (string) ($usuario['descripcion'] ?? ''),
+                'puntosFrecuentes'   => (string) ($usuario['puntos_frecuentes'] ?? ''),
+                'horariosHabituales' => (string) ($usuario['horarios_habituales'] ?? ''),
+                'fotoRuta'           => $fotoRuta,
+                'avatar'             => $fotoRuta,
+                'creado_en'          => (string) $usuario['creado_en'],
             ],
             'metricas' => [
                 'promedio'           => (float) $rep['promedio'],
@@ -85,20 +91,40 @@ final class PerfilModel
         ];
     }
 
-    public function actualizarDatosBasicos(int $usuarioId, string $nombre, string $facultad): void
-    {
+    public function actualizarPerfil(
+        int $usuarioId,
+        string $nombre,
+        string $campus,
+        string $facultad,
+        string $descripcion,
+        string $puntosFrecuentes,
+        string $horariosHabituales
+    ): void {
         $st = $this->db->prepare(
-            'UPDATE usuarios SET nombre = :nombre, facultad = :facultad WHERE id = :id'
+            'UPDATE usuarios
+                SET nombre = :nombre,
+                    campus = :campus,
+                    facultad = :facultad,
+                    descripcion = :descripcion,
+                    puntos_frecuentes = :puntos,
+                    horarios_habituales = :horarios
+              WHERE id = :id'
         );
         $st->execute([
-            ':nombre'   => $nombre,
-            ':facultad' => $facultad,
-            ':id'       => $usuarioId,
+            ':nombre'      => $nombre,
+            ':campus'      => $campus,
+            ':facultad'    => $facultad,
+            ':descripcion' => $descripcion,
+            ':puntos'      => $puntosFrecuentes,
+            ':horarios'    => $horariosHabituales,
+            ':id'          => $usuarioId,
         ]);
     }
 
-    // Registra una calificación (1..5) para un pedido completado donde el evaluador fue el comprador. 
-    public function crearResena(int $pedidoId, int $evaluadorId, int $calificacion, string $comentario): void
+    /**
+     * Registra una calificación (1..5 estrellas) para un pedido completado donde el comprador evalúa al vendedor.
+     */
+    public function crearResena(int $pedidoId, int $compradorId, int $estrellas, string $comentario): void
     {
         $st = $this->db->prepare(
             'SELECT id, comprador_id, vendedor_id, estado FROM pedidos WHERE id = :id LIMIT 1'
@@ -109,7 +135,7 @@ final class PerfilModel
         if ($pedido === false) {
             throw new DomainException('No se encontró el pedido indicado.');
         }
-        if ((int) $pedido['comprador_id'] !== $evaluadorId) {
+        if ((int) $pedido['comprador_id'] !== $compradorId) {
             throw new DomainException('Solo el comprador de este pedido puede emitir una reseña.');
         }
         if ((string) $pedido['estado'] !== 'completado') {
@@ -123,15 +149,15 @@ final class PerfilModel
         }
 
         $stIns = $this->db->prepare(
-            'INSERT INTO resenas (pedido_id, evaluador_id, evaluado_id, calificacion, comentario)
-             VALUES (:pid, :eval_id, :vend_id, :cal, :com)'
+            'INSERT INTO resenas (pedido_id, comprador_id, vendedor_id, estrellas, comentario)
+             VALUES (:pid, :comp_id, :vend_id, :estrellas, :com)'
         );
         $stIns->execute([
-            ':pid'     => $pedidoId,
-            ':eval_id' => $evaluadorId,
-            ':vend_id' => (int) $pedido['vendedor_id'],
-            ':cal'     => $calificacion,
-            ':com'     => $comentario,
+            ':pid'       => $pedidoId,
+            ':comp_id'   => $compradorId,
+            ':vend_id'   => (int) $pedido['vendedor_id'],
+            ':estrellas' => $estrellas,
+            ':com'       => $comentario,
         ]);
     }
 }
