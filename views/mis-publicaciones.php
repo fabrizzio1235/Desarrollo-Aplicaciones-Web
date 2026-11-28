@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="../assets/css/componentes.css">
   <link rel="stylesheet" href="../assets/css/mis-publicaciones.css">
 
-  <script src="../assets/js/api/apiAutenticacion.js" defer></script>
   <script src="../assets/js/core/ApiClient.js" defer></script>
   <script src="../assets/js/core/AuthService.js" defer></script>
   <script src="../assets/js/api/guardianRutas.js" defer></script>

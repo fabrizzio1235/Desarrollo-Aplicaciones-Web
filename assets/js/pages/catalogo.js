@@ -1,6 +1,6 @@
 'use strict';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const contenedorGrid = document.getElementById('grid-productos');
   const estadoVacio = document.getElementById('catalogo-vacio');
   const contadorResultados = document.getElementById('resultados-contador');
@@ -9,8 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputBusqueda = document.getElementById('input-busqueda');
   const selectOrden = document.getElementById('ordenar-por');
 
+  const placeholder = '../assets/images/image-placeholder.jpg';
   let solicitudActual = 0;
   let temporizadorBusqueda = null;
+  let idsFavoritos = new Set();
 
   // Carga las preferencias guardadas del catálogo.
   const preferencias = PreferenciasCatalogoStorage.cargar();
@@ -57,17 +59,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (radioCategoria) radioCategoria.checked = true;
   }
 
+  async function cargarIdsFavoritos() {
+    if (!window.jzFavoritos) return;
+    const res = await window.jzFavoritos.listar();
+    if (res.ok && Array.isArray(res.datos?.ids)) {
+      idsFavoritos = new Set(res.datos.ids.map(Number));
+    }
+  }
+
+  function actualizarEstadoBotonFav(boton, activo) {
+    boton.textContent = activo ? '♥' : '♡';
+    boton.setAttribute('aria-pressed', String(activo));
+    boton.setAttribute('aria-label', activo ? 'Quitar de favoritos' : 'Guardar en favoritos');
+    boton.title = activo ? 'Quitar de favoritos' : 'Guardar en favoritos';
+  }
+
   function crearTarjetaProducto(producto) {
+    const idNum = Number(producto.id);
+
     const tarjeta = document.createElement('article');
     tarjeta.className = 'product-card';
-    tarjeta.setAttribute('data-producto-id', producto.id);
+    tarjeta.setAttribute('data-producto-id', String(idNum));
 
     const figura = document.createElement('figure');
     figura.className = 'product-media';
 
     const imagen = document.createElement('img');
-    imagen.src = producto.imagen || '';
+    imagen.src = producto.imagen || placeholder;
     imagen.alt = `Imagen de ${producto.titulo}`;
+    imagen.onerror = () => {
+      imagen.onerror = null;
+      imagen.src = placeholder;
+    };
 
     const etiquetaModalidad = document.createElement('span');
     etiquetaModalidad.className =
@@ -75,36 +98,45 @@ document.addEventListener('DOMContentLoaded', () => {
     etiquetaModalidad.textContent =
       producto.modalidad === 'subasta' ? 'Subasta' : 'Precio fijo';
 
-    const activoFav = ApiProductos.esFavorito(producto.id);
     const botonFav = document.createElement('button');
     botonFav.type = 'button';
     botonFav.className = 'btn-fav';
-    botonFav.setAttribute('data-id', producto.id);
-    botonFav.setAttribute('aria-label', activoFav ? 'Quitar de favoritos' : 'Guardar en favoritos');
-    botonFav.setAttribute('aria-pressed', String(activoFav));
-    botonFav.title = activoFav ? 'Quitar de favoritos' : 'Guardar en favoritos';
-    botonFav.textContent = activoFav ? '♥' : '♡';
+    botonFav.setAttribute('data-id', String(idNum));
+    actualizarEstadoBotonFav(botonFav, idsFavoritos.has(idNum));
 
-    botonFav.addEventListener('click', evento => {
+    botonFav.addEventListener('click', async evento => {
       evento.preventDefault();
       evento.stopPropagation();
 
-      if (!ApiAutenticacion.obtenerSesion()) {
-        window.alert('Inicia sesión para guardar publicaciones en favoritos.');
-        window.location.href = 'login.php';
+      if (!window.jzFavoritos) return;
+
+      const btn = evento.currentTarget;
+      const idProducto = Number(btn.dataset.id);
+      btn.disabled = true;
+
+      const res = await window.jzFavoritos.toggle(idProducto);
+      btn.disabled = false;
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          window.alert('Inicia sesión para guardar publicaciones en favoritos.');
+          window.location.href = 'login.php';
+          return;
+        }
+        window.alert(res.mensaje || 'No se pudo actualizar tus favoritos.');
         return;
       }
 
-      const idProducto = evento.currentTarget.dataset.id;
-      const quedoAgregado = ApiProductos.alternarFavorito(idProducto);
+      const quedoAgregado = Boolean(res.datos?.esFavorito);
+      if (Array.isArray(res.datos?.ids)) {
+        idsFavoritos = new Set(res.datos.ids.map(Number));
+      } else if (quedoAgregado) {
+        idsFavoritos.add(idProducto);
+      } else {
+        idsFavoritos.delete(idProducto);
+      }
 
-      evento.currentTarget.textContent = quedoAgregado ? '♥' : '♡';
-      evento.currentTarget.setAttribute('aria-pressed', String(quedoAgregado));
-      evento.currentTarget.setAttribute(
-        'aria-label',
-        quedoAgregado ? 'Quitar de favoritos' : 'Guardar en favoritos'
-      );
-      evento.currentTarget.title = quedoAgregado ? 'Quitar de favoritos' : 'Guardar en favoritos';
+      actualizarEstadoBotonFav(btn, quedoAgregado);
     });
 
     figura.append(imagen, etiquetaModalidad, botonFav);
@@ -120,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tituloH2.className = 'product-title';
 
     const enlaceTitulo = document.createElement('a');
-    enlaceTitulo.href = `detalle-producto.php?id=${producto.id}`;
+    enlaceTitulo.href = `detalle-producto.php?id=${encodeURIComponent(idNum)}`;
     enlaceTitulo.textContent = producto.titulo;
     tituloH2.appendChild(enlaceTitulo);
 
@@ -171,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
       parrafoCierre.textContent = 'Cierra: ';
 
       const etiquetaTime = document.createElement('time');
-      const fechaCierre = new Date(producto.cierreSubasta);
+      const fechaCierre = new Date(String(producto.cierreSubasta || '').replace(' ', 'T'));
 
       if (Number.isNaN(fechaCierre.getTime())) {
         etiquetaTime.textContent = 'Próximamente';
@@ -207,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function mostrarProductos(listaProductos) {
-    contenedorGrid.innerHTML = '';
+    contenedorGrid.replaceChildren();
     contadorResultados.textContent =
       `Mostrando ${listaProductos.length} publicaciones activas`;
 
@@ -297,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (numeroSolicitud !== solicitudActual) return;
 
       console.error('Error al cargar el catálogo:', error);
-      contenedorGrid.innerHTML = '';
+      contenedorGrid.replaceChildren();
       contenedorGrid.setAttribute('hidden', '');
       if (estadoVacio) estadoVacio.setAttribute('hidden', '');
       contadorResultados.textContent =
@@ -358,5 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
     selectOrden.addEventListener('change', () => actualizarVistaCatalogo());
   }
 
-  actualizarVistaCatalogo();
+  await cargarIdsFavoritos();
+  await actualizarVistaCatalogo();
 });
