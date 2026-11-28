@@ -1,6 +1,5 @@
 <?php require __DIR__ . '/../config/guard_vista.php'; ?>
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
